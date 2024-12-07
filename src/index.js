@@ -212,11 +212,11 @@ const start = async () => {
     client.ev.on('messages.upsert', async (messages) => {
         console.log(" ----- mensagens ------ ");
         console.log(messages);
+
+        if (messages.type !== 'notify') return;
+        let M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client);
     
         try {
-            if (messages.type !== 'notify') return;
-            let M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client);
-    
             // Validação básica de mensagem
             if (!M.message || !M.key || M.key.remoteJid === 'status@broadcast') return;
             if (['protocolMessage', 'senderKeyDistributionMessage', '', null].includes(M.type)) return;
@@ -269,6 +269,10 @@ const start = async () => {
             await command.execute(client, flag, arg, M);
     
         } catch (err) {
+            if (err instanceof TypeError) {
+                await client.sendMessage(M.from, { text: "O comando não foi utilizado corretamente." }, { quoted: M })
+            }
+
             console.error('Erro ao processar mensagem:', err);
         }
     });
@@ -280,10 +284,6 @@ const start = async () => {
         console.log(event);
 
         const groupMetadata = await client.groupMetadata(event.id)
-
-        console.log('------ grupo metadata ------');
-        console.log(groupMetadata);
-        
 
         const text = event.action === 'add'
         ? ` Seja muito bem-vindo(a) ao nosso grupo! => *${groupMetadata.subject}* -\n\n💈 *Descrição do Grupo:*\n${
@@ -308,4 +308,4 @@ const start = async () => {
     return client
 }
 
-start()
+start().catch(err => console.error(err));
