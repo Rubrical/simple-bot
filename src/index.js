@@ -12,12 +12,13 @@ const chalk = require('chalk')
 const { join } = require('path')
 const { readdirSync, remove } = require('fs-extra');
 const utils = require('./utils');
+const { log } = require('console');
 
 
 // get config
 function getConfig() {
     return {
-        name: process.env.NAME || 'ChiakiBot',
+        name: 'ChiakiBot',
         prefix: process.env.PREFIX || '/',
     }
 }
@@ -244,7 +245,6 @@ const start = async () => {
                 }
             }
     
-            // Validação do comando
             const command = Array.from(client.cmd.values()).find(cmd =>
                 cmd.command.aliases.includes(cmdName)
             );
@@ -254,10 +254,21 @@ const start = async () => {
             }
     
             // Regras de moderação para grupos
+            console.log("execução admin");
+            console.log(sender);
+            console.log(groupAdmins);
+            console.log(command.command.category);
+            
+
             if (isGroup && command.command.category === 'moderation') {
-                if (!groupAdmins.includes(sender)) return M.reply('🟨 *Usuário não é admin*');
-                if (!groupAdmins.includes(client.user.id.split(':')[0] + '@s.whatsapp.net'))
-                    return M.reply('💔 *Desculpe, você não é um admin*');
+                if (!groupAdmins.includes(sender)) {
+                    return M.reply('🟨 *Usuário não é admin*');
+                }
+
+                const botId = client.user.id.split(':')[0] + '@s.whatsapp.net';
+                if (!groupAdmins.includes(botId)) {
+                    return M.reply(`💔 *Desculpe, o ${client.config.name} não é um admin*`);
+                }
             }
     
             console.log(`Executando comando: ${command.command.name}`);
@@ -281,7 +292,7 @@ const start = async () => {
         
 
         const text = event.action === 'add'
-        ? `- ${groupMetadata.subject} -\n\n💈 *Descrição do Grupo:*\n${
+        ? ` Seja muito bem-vindo(a) ao nosso grupo! => *${groupMetadata.subject}* -\n\n💈 *Descrição do Grupo:*\n${
             groupMetadata.desc || 'Sem descrição disponível.'
         }\n\nSiga as regras e se divirta!\n\n*‣ ${event.participants
             .map((jid) => `@${jid.split('@')[0]}`)

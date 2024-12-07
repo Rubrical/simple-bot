@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "node --watch src/index.js",
-    "start:prod": "node src/indedx.js"
+    "start:prod": "node src/index.js"
   },
   "keywords": [],
   "author": "",
