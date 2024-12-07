@@ -22,15 +22,13 @@ module.exports.execute = async (client, flag, arg, M) => {
 
         });
 
-        await client.sendMessage(
+        const messageText = commandList.join('');        
+
+        client.sendMessage(
             M.from,
-            {
-                caption: base,
-            },
-            {
-                quoted: M
-            }
-        )
+            { text: messageText },
+            { quoted: M }
+        );
 
     }
 }
