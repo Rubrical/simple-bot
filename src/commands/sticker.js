@@ -4,7 +4,10 @@ module.exports.execute = async (client, flag, arg, M) => {
     try {
         if (!M.messageTypes(M.type) && !M.messageTypes(M.quoted.mtype))
             return void M.reply('🟥 *Caption/Quote an image/video/gif message*')
-    
+        
+        if (!M.mtype) await client.sendMessage(M.from, { text: "Execute o comando com uma imagem" }, { quoted: M })
+
+
         const pack = arg.split('|')
         const buffer = M.quoted ? await M.quoted.download() : await M.download()
         const sticker = await new Sticker(buffer, {
@@ -20,10 +23,10 @@ module.exports.execute = async (client, flag, arg, M) => {
                     ? 'circle'
                     : 'full'
         }).build()
-        client.sendMessage(M.from, { sticker }, { quoted: M })
+        await client.sendMessage(M.from, { sticker }, { quoted: M })
     } catch(err) {
         console.error(err)
-        client.sendMessage(M.from, { text: "um erro ocorreu" }, { quoted: M })
+        await client.sendMessage(M.from, { text: "um erro ocorreu" }, { quoted: M })
     }
 }
 

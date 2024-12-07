@@ -24,7 +24,7 @@ module.exports.execute = async (client, flag, arg, M) => {
 
         const messageText = commandList.join('');        
 
-        client.sendMessage(
+        await client.sendMessage(
             M.from,
             { text: messageText },
             { quoted: M }

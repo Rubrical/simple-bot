@@ -1,6 +1,6 @@
 module.exports.execute = async (client, flag, arg, M) => {
     if (!M.quoted) return M.reply('🟥 *Responda a mensagem que você quer apagar!*')
-    client.sendMessage(M.from, {
+    await client.sendMessage(M.from, {
         delete: M.quoted.key
     })
 }

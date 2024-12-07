@@ -204,7 +204,7 @@ const start = async () => {
         
         if (connection === "open") {
             console.log("Chiaki Bot! De pé e operante!", event);
-            loadCommands()
+            await loadCommands()
         }
     })
 
@@ -254,12 +254,6 @@ const start = async () => {
             }
     
             // Regras de moderação para grupos
-            console.log("execução admin");
-            console.log(sender);
-            console.log(groupAdmins);
-            console.log(command.command.category);
-            
-
             if (isGroup && command.command.category === 'moderation') {
                 if (!groupAdmins.includes(sender)) {
                     return M.reply('🟨 *Usuário não é admin*');
@@ -272,7 +266,7 @@ const start = async () => {
             }
     
             console.log(`Executando comando: ${command.command.name}`);
-            command.execute(client, flag, arg, M);
+            await command.execute(client, flag, arg, M);
     
         } catch (err) {
             console.error('Erro ao processar mensagem:', err);
@@ -305,7 +299,7 @@ const start = async () => {
         ? `Usuário *@${event.participants[0].split('@')[0]}* foi rebaixado de cargo.`
         : `Digam olá ao novo ADM! *@${event.participants[0].split('@')[0]}*`;
 
-        client.sendMessage(event.id, {
+        await client.sendMessage(event.id, {
             text,
             mentions: event.participants
         });
