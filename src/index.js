@@ -12,8 +12,7 @@ const chalk = require('chalk')
 const { join } = require('path')
 const { readdirSync, remove } = require('fs-extra');
 const utils = require('./utils');
-const { log } = require('console');
-
+const logger = require('./logger')
 
 // get config
 function getConfig() {
@@ -199,20 +198,17 @@ const start = async () => {
         if (connection === "close") {
             const shouldReconnect =
             (lastDisconnect?.error)?.output.statusCode !== DisconnectReason.loggedOut;
-            console.log(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
+            logger.info(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
         }
         
         if (connection === "open") {
-            console.log("Chiaki Bot! De pé e operante!", event);
+            logger.info("Chiaki Bot! De pé e operante!", event);
             await loadCommands()
         }
     })
 
     // Entrada de mensagens
     client.ev.on('messages.upsert', async (messages) => {
-        console.log(" ----- mensagens ------ ");
-        console.log(messages);
-
         if (messages.type !== 'notify') return;
         let M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client);
     
@@ -241,7 +237,7 @@ const start = async () => {
                     groupMembers = gcMeta.participants || [];
                     groupAdmins = groupMembers.filter((v) => v.admin).map((v) => v.id);
                 } catch (err) {
-                    console.error('Erro ao obter metadata do grupo:', err);
+                    logger.error('Erro ao obter metadata do grupo:', err);
                 }
             }
     
@@ -265,7 +261,7 @@ const start = async () => {
                 }
             }
     
-            console.log(`Executando comando: ${command.command.name}`);
+            logger.info(`Executando comando: ${command.command.name} para ${M.from}`);
             await command.execute(client, flag, arg, M);
     
         } catch (err) {
@@ -273,7 +269,7 @@ const start = async () => {
                 await client.sendMessage(M.from, { text: "O comando não foi utilizado corretamente." }, { quoted: M })
             }
 
-            console.error('Erro ao processar mensagem:', err);
+            logger.error('Erro ao processar mensagem:', err);
         }
     });
     
@@ -281,7 +277,7 @@ const start = async () => {
     // Atualização de grupos
     client.ev.on('group-participants.update', async (event) => {
         console.log("----- participantes evento ------ ");
-        console.log(event);
+        logger.info(JSON.stringify(event));
 
         const groupMetadata = await client.groupMetadata(event.id)
 
@@ -308,4 +304,5 @@ const start = async () => {
     return client
 }
 
-start().catch(err => console.error(err));
+start().catch(err => logger.error(err));
+

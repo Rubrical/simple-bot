@@ -1,4 +1,5 @@
 const { Sticker } = require('wa-sticker-formatter')
+const logger = require('../logger')
 
 module.exports.execute = async (client, flag, arg, M) => {
     try {
@@ -22,7 +23,7 @@ module.exports.execute = async (client, flag, arg, M) => {
         }).build()
         await client.sendMessage(M.from, { sticker }, { quoted: M })
     } catch(err) {
-        console.error(err)
+        logger.error(JSON.stringify(err))
 
         if (err instanceof TypeError && !M.quoted.mtype) {
             await client.sendMessage(M.from, {
