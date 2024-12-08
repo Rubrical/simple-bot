@@ -1,6 +1,6 @@
 {
   "name": "simple-bot",
-  "version": "1.0.0",
+  "version": "1.0.0-ALPHA",
   "main": "index.js",
   "scripts": {
     "dev": "node --watch src/index.js",
