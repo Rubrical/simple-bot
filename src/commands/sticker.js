@@ -3,8 +3,10 @@ const logger = require('../logger')
 
 module.exports.execute = async (client, flag, arg, M) => {
     try {
-        if (!M.messageTypes(M.type) && !M.messageTypes(M.quoted.mtype))
-            return void M.reply('🟥 *Mencione uma mensagem imagem, vídeo ou gif*')
+        const isValidMessage = M.messageTypes(M.type) || (M.quoted && M.messageTypes(M.quoted.mtype));
+        if (!isValidMessage) {
+            return M.reply('🟥 *Mencione uma mensagem com imagem, vídeo ou gif*');
+        }
         
         const name = client.config.name
         const pack = arg.split('|')

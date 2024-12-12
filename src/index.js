@@ -210,6 +210,9 @@ const start = async () => {
 
     // Entrada de mensagens
     client.ev.on('messages.upsert', async (messages) => {
+        let type = getContentType(messages.messages)
+        console.log(type);
+
         if (messages.type !== 'notify') return;
         let M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client);
     
@@ -217,6 +220,10 @@ const start = async () => {
             // Validação básica de mensagem
             if (!M.message || !M.key || M.key.remoteJid === 'status@broadcast') return;
             if (['protocolMessage', 'senderKeyDistributionMessage', '', null].includes(M.type)) return;
+            if (M.type === 'viewOnceMessageV2') {
+                M.message = M.message[M.type].message;
+                M.type = getContentType(M.message);
+            }
     
             const { isGroup, sender, from, body } = M;
     
