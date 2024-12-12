@@ -199,6 +199,7 @@ const start = async () => {
             const shouldReconnect =
             (lastDisconnect?.error)?.output.statusCode !== DisconnectReason.loggedOut;
             logger.info(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
+            await start();
         }
         
         if (connection === "open") {

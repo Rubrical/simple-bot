@@ -4,33 +4,54 @@ const logger = require('../logger')
 module.exports.execute = async (client, flag, arg, M) => {
     try {
         if (!M.messageTypes(M.type) && !M.messageTypes(M.quoted.mtype))
-            return void M.reply('🟥 *Caption/Quote an image/video/gif message*')
+            return void M.reply('🟥 *Mencione uma mensagem imagem, vídeo ou gif*')
         
+        const name = client.config.name
         const pack = arg.split('|')
-        const buffer = M.quoted ? await M.quoted.download() : await M.download()
-        const sticker = await new Sticker(buffer, {
-            pack: pack[1] ? pack[1].trim() : 'ChiakiBot ALPHA 0.1',
-            author: pack[2] ? pack[2].trim() : `ChiakiBot`,
+        const packName = pack[1] ? pack[1].trim() : 'ChiakiBot ALPHA 0.1'
+        const authorName = pack[2] ? pack[2].trim() : name
+        const mediaBuffer = M.quoted ? await M.quoted.download() : await M.download()
+        const stickerType = 
+            flag.includes('--c') || flag.includes('--crop') ? 'crop' :
+            flag.includes('--s') || flag.includes('--stretch') ? 'default' :
+            flag.includes('--circle') ? 'circle' : 'full';
+        const sticker = await new Sticker(mediaBuffer, {
+            pack: packName,
+            author: authorName,
             quality: 70,
-            type:
-                flag.includes('--c') || flag.includes('--crop')
-                    ? 'crop'
-                    : flag.includes('--s') || flag.includes('--stretch')
-                    ? 'default'
-                    : flag.includes('--circle')
-                    ? 'circle'
-                    : 'full'
-        }).build()
+            type:stickerType
+        }).build();
+
         await client.sendMessage(M.from, { sticker }, { quoted: M })
     } catch(err) {
-        logger.error(JSON.stringify(err))
+        logger.error("Houve um erro na execução do comando {sticker}:")
+        logger.error(err)
 
-        if (err instanceof TypeError && !M.quoted.mtype) {
-            await client.sendMessage(M.from, {
-                 text: "Marque uma imagem com uma foto ou digite o comando com a foto" }, { quoted: M })    
+        if (err instanceof TypeError && !(M.quoted && M.quoted.mtype)) {
+            logger.error(`O usuário ${M.from} digitou o comando /s de forma errada`)
+
+            return await client.sendMessage(
+                M.from, 
+                { text: "Marque um item com o comando ou digite o comando com o item" }, 
+                { quoted: M }
+            )    
         }
 
-        await client.sendMessage(M.from, { text: "Um erro ocorreu, tente novamente." }, { quoted: M })
+        if (err.message === "Input image exceeds pixel limit") {
+            logger.error(`O usuário ${M.from} enviou um arquivo inválido para o comando /s`)
+
+            return await client.sendMessage(
+                M.from, 
+                { text: "Arquivo *inválido* ou *improcessável*" }, 
+                { quoted: M }
+            )    
+        }
+
+        await client.sendMessage(
+            M.from,
+            { text: "Um erro ocorreu, tente novamente." }, 
+            { quoted: M }
+        )
     }
 }
 
@@ -39,5 +60,5 @@ module.exports.command = {
     aliases: ['s'],
     category: 'utils',
     usage: '[quote the video or image] |PackName|AuthorName',
-    description: 'Converte uma imagem para sticker'
+    description: 'Converte uma imagem para sticker, sendo possível escolher o nome e autor da figurinha: Exemplo: /s  Meu pacote|Eu'
 }
