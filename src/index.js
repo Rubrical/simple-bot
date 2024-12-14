@@ -175,6 +175,12 @@ const start = async () => {
     client.cmd = new Map()
     client.log = (text, color = 'green') => color ? console.log(chalk.keyword(color)(text)) : console.log(chalk.green(text))
 
+    const isInstalled = client.utils.verifyIfFFMPEGisInstalled();
+
+    if (!isInstalled) {
+        logger.warn('O FFMPEG não está instalado, instále-o!')
+        return
+    }
     
     const loadCommands = async () => {
         const readCommand = (rootDir) => {

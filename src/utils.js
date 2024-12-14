@@ -9,6 +9,7 @@ const { createCanvas } = require('canvas')
 const { sizeFormatter } = require('human-readable')
 const { readFile, unlink, writeFile } = require('fs-extra')
 const { removeBackgroundFromImageBase64 } = require('remove.bg')
+const { spawn } = require('node:child_process')
 
 /**
  * @param {string} url
@@ -232,6 +233,26 @@ const restart = () => {
 
 const removeDuplicates = (arr) => [...new Set(arr)]
 
+const verifyIfFFMPEGisInstalled = () => {
+    return new Promise((resolve, reject) => {
+        const ffmpegProcess = spawn('ffmpeg', ['-version']);
+    
+        ffmpegProcess.on('error', () => resolve(false))
+        ffmpegProcess.stdout.on('data', data => { 
+            if (data.toString().toLowerCase().includes('ffmpeg')) 
+                resolve(true) 
+        })
+        ffmpegProcess.stderr.on('data', data => {
+            if (data.toString().toLowerCase().includes('ffmpeg')) 
+                resolve(true)
+        })
+        ffmpegProcess.on('close', code => {
+            if (code !==0) 
+                resolve(false)
+        })
+    })
+}
+
 module.exports = {
     removeDuplicates,
     calculatePing,
@@ -251,5 +272,6 @@ module.exports = {
     restart,
     term,
     webpToMp4,
-    webpToPng
+    webpToPng,
+    verifyIfFFMPEGisInstalled
 }
