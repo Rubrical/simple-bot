@@ -173,7 +173,7 @@ const start = async () => {
     client.utils = utils
     client.config = getConfig()
     client.cmd = new Map()
-    client.log = (text, color = 'green') => color ? console.log(chalk.keyword(color)(text)) : console.log(chalk.green(text))
+    client.log = logger
 
     const isInstalled = client.utils.verifyIfFFMPEGisInstalled();
 
@@ -188,9 +188,9 @@ const start = async () => {
             for (let file of commandFiles) {
                 const cmd = require(join(rootDir, file));
                 client.cmd.set(cmd.command.name, cmd);
-                client.log(`Loaded: ${cmd.command.name.toUpperCase()} from ${file}`);
+                client.log.info(`Loaded: ${cmd.command.name.toUpperCase()} from ${file}`);
             }
-            client.log('Successfully Loaded commands');
+            client.log.info('Successfully Loaded commands');
         };
     
         readCommand(join(__dirname, '.', 'commands'));
@@ -204,12 +204,12 @@ const start = async () => {
         if (connection === "close") {
             const shouldReconnect =
             (lastDisconnect?.error)?.output.statusCode !== DisconnectReason.loggedOut;
-            logger.info(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
+            client.log.info(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
             await start();
         }
         
         if (connection === "open") {
-            logger.info("Chiaki Bot! De pé e operante!", event);
+            client.log.info("Chiaki Bot! De pé e operante!", event);
             await loadCommands()
         }
     })
@@ -251,7 +251,7 @@ const start = async () => {
                     groupMembers = gcMeta.participants || [];
                     groupAdmins = groupMembers.filter((v) => v.admin).map((v) => v.id);
                 } catch (err) {
-                    logger.error('Erro ao obter metadata do grupo:', err);
+                    client.log.error('Erro ao obter metadata do grupo:', err);
                 }
             }
     
@@ -275,7 +275,7 @@ const start = async () => {
                 }
             }
     
-            logger.info(`Executando comando: ${command.command.name} para ${M.from}`);
+            client.log.info(`Executando comando: ${command.command.name} para ${M.from}`);
             await command.execute(client, flag, arg, M);
     
         } catch (err) {
@@ -283,7 +283,7 @@ const start = async () => {
                 await client.sendMessage(M.from, { text: "O comando não foi utilizado corretamente." }, { quoted: M })
             }
 
-            logger.error('Erro ao processar mensagem:', err);
+            client.log.error('Erro ao processar mensagem:', err);
         }
     });
     
@@ -291,7 +291,7 @@ const start = async () => {
     // Atualização de grupos
     client.ev.on('group-participants.update', async (event) => {
         console.log("----- participantes evento ------ ");
-        logger.info(JSON.stringify(event));
+        client.log.info(JSON.stringify(event));
 
         const groupMetadata = await client.groupMetadata(event.id)
 
