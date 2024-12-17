@@ -290,7 +290,7 @@ const start = async () => {
 
     // Atualização de grupos
     client.ev.on('group-participants.update', async (event) => {
-        console.log("----- participantes evento ------ ");
+        client.log.info("----- participantes evento ------ ");
         client.log.info(JSON.stringify(event));
 
         const groupMetadata = await client.groupMetadata(event.id)
