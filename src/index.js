@@ -216,9 +216,6 @@ const start = async () => {
 
     // Entrada de mensagens
     client.ev.on('messages.upsert', async (messages) => {
-        let type = getContentType(messages.messages)
-        console.log(type);
-
         if (messages.type !== 'notify') return;
         let M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client);
     
@@ -230,7 +227,13 @@ const start = async () => {
                 M.message = M.message[M.type].message;
                 M.type = getContentType(M.message);
             }
-    
+
+            if (M.key.participant) {
+                logger.info(`Mensagem recebida de ${M.key.participant} no grupo ${M.from}`)
+            } else {
+                logger.info(`Mensagem recebida de ${M.from}`)
+            }
+
             const { isGroup, sender, from, body } = M;
     
             if (!body || !body.startsWith(client.config.prefix)) return;
