@@ -199,12 +199,20 @@ const start = async () => {
 
     client.ev.on('creds.update', saveCreds)
     client.ev.on('connection.update', async (event) => {
+        let connectionAttempts = 0
 
         const { connection, lastDisconnect } = event;
         if (connection === "close") {
             const shouldReconnect =
             (lastDisconnect?.error)?.output.statusCode !== DisconnectReason.loggedOut;
+            
+            if (connectionAttempts > 4) {
+                logger.error("Não foi possível se conectar ao número especificado")
+                return
+            }
+            
             client.log.info(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
+            connectionAttempts++
             await start();
         }
         
