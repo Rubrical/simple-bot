@@ -8,7 +8,7 @@ module.exports.execute = async (client, flag, arg, M) => {
     const admNumber = M.sender.split('@')[0]
     const admPushName = M.pushName
     const whoMentioned = `Menção do ADM ${admPushName} @${admNumber}`
-    const members = groupData.participants.map(x => x.id) || []
+    const members = await groupData.participants.map(x => x.id) || []
     
     if (M.message.conversation && M.message.conversation.startsWith('/totag')) 
     {
@@ -22,6 +22,7 @@ module.exports.execute = async (client, flag, arg, M) => {
     if (!mentionMessage || mentionMessage.trim().length === 0) 
     {
         M.reply('🟥 *Mencione uma mensagem com seu aviso ou digite o comando com o aviso*')
+        return
     }
     
     await client.sendMessage(M.from, 
