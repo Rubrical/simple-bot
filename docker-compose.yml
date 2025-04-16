@@ -1,0 +1,7 @@
+services:
+  bot:
+    image: simple-bot:latest
+    build: .
+    volumes:
+      - ./data:/app/session:rw
+      - ./data2:/app/logs:rw

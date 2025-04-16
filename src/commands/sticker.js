@@ -10,17 +10,17 @@ module.exports.execute = async (client, flag, arg, M) => {
         
         const name = client.config.name
         const pack = arg.split('|')
-        const packName = pack[1] ? pack[1].trim() : 'ChiakiBot ALPHA 0.1.2'
+        const packName = pack[1] ? pack[1].trim() : 'ChiakiBot ALPHA 0.2'
         const authorName = pack[2] ? pack[2].trim() : name
         const mediaBuffer = M.quoted ? await M.quoted.download() : await M.download()
-        const stickerType = 
+        const stickerType =
             flag.includes('--c') || flag.includes('--crop') ? 'crop' :
             flag.includes('--s') || flag.includes('--stretch') ? 'default' :
             flag.includes('--circle') ? 'circle' : 'full';
         const sticker = await new Sticker(mediaBuffer, {
             pack: packName,
             author: authorName,
-            quality: 70,
+            quality: 100,
             type:stickerType
         }).build();
 

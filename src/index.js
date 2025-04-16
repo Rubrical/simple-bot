@@ -200,12 +200,17 @@ const start = async () => {
     client.ev.on('creds.update', saveCreds)
     client.ev.on('connection.update', async (event) => {
 
+        let connectionAttempts = 0
         const { connection, lastDisconnect } = event;
         if (connection === "close") {
             const shouldReconnect =
             (lastDisconnect?.error)?.output.statusCode !== DisconnectReason.loggedOut;
             client.log.info(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
-            await start();
+            connectionAttempts++
+
+            if (connectionAttempts <= 5) {
+                await start();
+            }
         }
         
         if (connection === "open") {
@@ -216,13 +221,16 @@ const start = async () => {
 
     // Entrada de mensagens
     client.ev.on('messages.upsert', async (messages) => {
-        let type = getContentType(messages.messages)
-        console.log(type);
+        logger.info("messages abaixo")
+        logger.info(JSON.stringify(messages))
 
         if (messages.type !== 'notify') return;
         let M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client);
     
         try {
+            logger.info("M abaixo:")
+            logger.info(JSON.stringify(M))
+
             // Validação básica de mensagem
             if (!M.message || !M.key || M.key.remoteJid === 'status@broadcast') return;
             if (['protocolMessage', 'senderKeyDistributionMessage', '', null].includes(M.type)) return;
@@ -276,7 +284,7 @@ const start = async () => {
             }
     
             client.log.info(`Executando comando: ${command.command.name} para ${M.from}`);
-            await command.execute(client, flag, arg, M);
+            await command.execute(client, flag, arg, M, messages);
     
         } catch (err) {
             if (err instanceof TypeError) {

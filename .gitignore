@@ -2,3 +2,5 @@
 package-lock.json
 /session
 /logs
+/data
+/data2
