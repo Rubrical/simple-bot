@@ -205,6 +205,12 @@ const start = async () => {
         if (connection === "close") {
             const shouldReconnect =
             (lastDisconnect?.error)?.output.statusCode !== DisconnectReason.loggedOut;
+            
+            if (connectionAttempts > 4) {
+                logger.error("Não foi possível se conectar ao número especificado")
+                return
+            }
+            
             client.log.info(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
             connectionAttempts++
 
@@ -238,7 +244,13 @@ const start = async () => {
                 M.message = M.message[M.type].message;
                 M.type = getContentType(M.message);
             }
-    
+
+            if (M.key.participant) {
+                logger.info(`Mensagem recebida de ${M.key.participant} no grupo ${M.from}`)
+            } else {
+                logger.info(`Mensagem recebida de ${M.from}`)
+            }
+
             const { isGroup, sender, from, body } = M;
     
             if (!body || !body.startsWith(client.config.prefix)) return;

@@ -14,5 +14,5 @@ module.exports.command = {
     exp: 10,
     category: 'moderation',
     usage: '[mention user | quote user]',
-    description: 'Remove o usuário especificado'
+    description: 'Remove o usuário especificado. Exemplo: /rem @fulaninho'
 }
