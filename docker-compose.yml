@@ -1,6 +1,6 @@
 services:
   bot:
-    image: simple-bot:latest
+    image: chiaki-bot:latest
     build: .
     volumes:
       - ./data:/app/session:rw
