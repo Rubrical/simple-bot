@@ -51,112 +51,155 @@ const downloadMedia = async (message) => {
 }
 
 
-// serialize WA messages
+/**
+ * Serializa mensagens do WhatsApp para um formato mais fácil de trabalhar
+ * @param {Object} M - A mensagem recebida do WhatsApp
+ * @param {Object} client - Instância do cliente Baileys
+ * @returns {Object} Mensagem serializada com propriedades padronizadas
+ */
 function serialize(M, client) {
+    // Verificação inicial da mensagem
+    if (!M) return {};
+
+    // Funções auxiliares locais
+    const extractQuotedText = (quotedMsg, contentType) => {
+        return quotedMsg[contentType]?.text ||
+               quotedMsg[contentType]?.description ||
+               quotedMsg[contentType]?.caption ||
+               quotedMsg[contentType]?.hydratedTemplate?.hydratedContentText ||
+               quotedMsg[contentType] ||
+               '';
+    };
+
+    const extractMessageBody = (message, type) => {
+        return message?.conversation ||
+               message?.[type]?.text ||
+               message?.[type]?.caption ||
+               (type === 'listResponseMessage' && message?.[type]?.singleSelectReply?.selectedRowId) ||
+               (type === 'buttonsResponseMessage' && message?.[type]?.selectedButtonId) ||
+               (type === 'templateButtonReplyMessage' && message?.[type]?.selectedId) ||
+               '';
+    };
+
+    // 1. Processamento das propriedades básicas da mensagem
     if (M.key) {
-        M.id = M.key.id
-        M.isSelf = M.key.fromMe
-        M.from = decodeJid(M.key.remoteJid)
-        M.isGroup = M.from.endsWith('@g.us')
-        M.sender = M.isGroup ? decodeJid(M.key.participant) : M.isSelf ? decodeJid(client.user.id) : M.from
+        M.id = M.key.id || '';
+        M.isSelf = M.key.fromMe || false;
+        M.from = decodeJid(M.key.remoteJid) || '';
+        M.isGroup = M.from.endsWith('@g.us');
+        M.sender = M.isGroup
+            ? decodeJid(M.key.participant)
+            : M.isSelf
+                ? decodeJid(client.user.id)
+                : M.from;
     }
+
+    // 2. Processamento do conteúdo da mensagem
     if (M.message) {
-        M.type = getContentType(M.message)
-        if (M.type === 'ephemeralMessage') {
-            M.message = M.message[M.type].message
-            const tipe = Object.keys(M.message)[0]
-            M.type = tipe
-            if (tipe === 'viewOnceMessageV2') {
-                M.message = M.message[M.type].message
-                M.type = getContentType(M.message)
-            }
-        }
-        if (M.type === 'viewOnceMessageV2') {
-            M.message = M.message[M.type].message
-            M.type = getContentType(M.message)
-        }
-        M.messageTypes = (type) => ['videoMessage', 'imageMessage'].includes(type)
         try {
-            const quoted = M.message[M.type]?.contextInfo
-            if (quoted.quotedMessage['ephemeralMessage']) {
-                const tipe = Object.keys(quoted.quotedMessage.ephemeralMessage.message)[0]
-                if (tipe === 'viewOnceMessageV2') {
-                    M.quoted = {
-                        type: 'view_once',
-                        stanzaId: quoted.stanzaId,
-                        participant: decodeJid(quoted.participant),
-                        message: quoted.quotedMessage.ephemeralMessage.message.viewOnceMessage.message
+            M.type = getContentType(M.message) || '';
+
+            // 2.1. Tratamento de mensagens especiais (efêmeras, viewOnce)
+            const processSpecialMessage = (msg) => {
+                if (msg.ephemeralMessage) {
+                    msg = msg.ephemeralMessage.message;
+                    const contentType = getContentType(msg);
+                    if (contentType === 'viewOnceMessageV2') {
+                        msg = msg.viewOnceMessageV2.message;
                     }
+                    return { message: msg, type: getContentType(msg) };
+                }
+                if (msg.viewOnceMessageV2) {
+                    msg = msg.viewOnceMessageV2.message;
+                    return { message: msg, type: getContentType(msg) };
+                }
+                return { message: msg, type: getContentType(msg) };
+            };
+
+            let processed = processSpecialMessage(M.message);
+            M.message = processed.message;
+            M.type = processed.type;
+
+            // 2.2. Definição de tipos de mensagem válidos para stickers
+            M.messageTypes = (type) => ['videoMessage', 'imageMessage', 'stickerMessage'].includes(type);
+
+            // 3. Processamento de mensagens citadas (quoted)
+            try {
+                const quotedContext = M.message[M.type]?.contextInfo;
+
+                if (quotedContext?.quotedMessage) {
+                    let quotedMsg = quotedContext.quotedMessage;
+                    let quotedType = 'normal';
+
+                    // Processa mensagens citadas especiais
+                    if (quotedMsg.ephemeralMessage) {
+                        quotedMsg = quotedMsg.ephemeralMessage.message;
+                        quotedType = 'ephemeral';
+                    }
+                    if (quotedMsg.viewOnceMessageV2) {
+                        quotedMsg = quotedMsg.viewOnceMessageV2.message;
+                        quotedType = 'view_once';
+                    }
+
+                    // Determina o tipo de conteúdo da mensagem citada
+                    const quotedContentType = getContentType(quotedMsg);
+
+                    M.quoted = {
+                        type: quotedType,
+                        stanzaId: quotedContext.stanzaId,
+                        participant: decodeJid(quotedContext.participant),
+                        message: quotedMsg,
+                        mtype: quotedContentType,
+                        isSelf: decodeJid(quotedContext.participant) === decodeJid(client.user.id),
+                        text: extractQuotedText(quotedMsg, quotedContentType),
+                        key: {
+                            id: quotedContext.stanzaId,
+                            fromMe: decodeJid(quotedContext.participant) === decodeJid(client.user.id),
+                            remoteJid: M.from
+                        },
+                        download: () => downloadMedia(quotedMsg)
+                    };
                 } else {
-                    M.quoted = {
-                        type: 'ephemeral',
-                        stanzaId: quoted.stanzaId,
-                        participant: decodeJid(quoted.participant),
-                        message: quoted.quotedMessage.ephemeralMessage.message
-                    }
+                    M.quoted = null;
                 }
-            } else if (quoted.quotedMessage['viewOnceMessageV2']) {
-                M.quoted = {
-                    type: 'view_once',
-                    stanzaId: quoted.stanzaId,
-                    participant: decodeJid(quoted.participant),
-                    message: quoted.quotedMessage.viewOnceMessage.message
-                }
-            } else {
-                M.quoted = {
-                    type: 'normal',
-                    stanzaId: quoted.stanzaId,
-                    participant: decodeJid(quoted.participant),
-                    message: quoted.quotedMessage
-                }
+            } catch (quotedError) {
+                client.log.error('Erro ao processar mensagem citada:', quotedError);
+                M.quoted = null;
             }
-            M.quoted.isSelf = M.quoted.participant === decodeJid(client.user.id)
-            M.quoted.mtype = Object.keys(M.quoted.message).filter(
-                (v) => v.includes('Message') || v.includes('conversation')
-            )[0]
-            M.quoted.text =
-                M.quoted.message[M.quoted.mtype]?.text ||
-                M.quoted.message[M.quoted.mtype]?.description ||
-                M.quoted.message[M.quoted.mtype]?.caption ||
-                M.quoted.message[M.quoted.mtype]?.hydratedTemplate?.hydratedContentText ||
-                M.quoted.message[M.quoted.mtype] ||
-                ''
-            M.quoted.key = {
-                id: M.quoted.stanzaId,
-                fromMe: M.quoted.isSelf,
-                remoteJid: M.from
+
+            // 4. Extração do corpo da mensagem
+            M.body = extractMessageBody(M.message, M.type);
+
+            // 5. Métodos auxiliares
+            M.reply = (text, options = {}) => {
+                return client.sendMessage(
+                    M.from,
+                    { text },
+                    { quoted: M, ...options }
+                );
+            };
+
+            // 6. Menções e anexos
+            M.mentions = [];
+            if (M.quoted?.participant) {
+                M.mentions.push(M.quoted.participant);
             }
-            M.quoted.download = () => downloadMedia(M.quoted.message)
-        } catch {
-            M.quoted = null
+
+            const mentionedJids = M?.message?.[M.type]?.contextInfo?.mentionedJid || [];
+            M.mentions.push(...mentionedJids.filter(Boolean));
+
+            // 7. Utilitários de download e extração
+            M.download = () => downloadMedia(M.message);
+            M.numbers = client.utils.extractNumbers(M.body);
+            M.urls = client.utils.extractUrls(M.body);
+
+        } catch (messageError) {
+            client.log.error('Erro ao serializar mensagem:', messageError);
+            return {};
         }
-        M.body =
-            M.message?.conversation ||
-            M.message?.[M.type]?.text ||
-            M.message?.[M.type]?.caption ||
-            (M.type === 'listResponseMessage' && M.message?.[M.type]?.singleSelectReply?.selectedRowId) ||
-            (M.type === 'buttonsResponseMessage' && M.message?.[M.type]?.selectedButtonId) ||
-            (M.type === 'templateButtonReplyMessage' && M.message?.[M.type]?.selectedId) ||
-            ''
-        M.reply = (text) =>
-            client.sendMessage(
-                M.from,
-                {
-                    text
-                },
-                {
-                    quoted: M
-                }
-            )
-        M.mentions = []
-        if (M.quoted?.participant) M.mentions.push(M.quoted.participant)
-        const array = M?.message?.[M.type]?.contextInfo?.mentionedJid || []
-        M.mentions.push(...array.filter(Boolean))
-        M.download = () => downloadMedia(M.message)
-        M.numbers = client.utils.extractNumbers(M.body)
-        M.urls = client.utils.extractUrls(M.body)
     }
-    return M
+
+    return M;
 }
 
 
@@ -181,7 +224,7 @@ const start = async () => {
         logger.warn('O FFMPEG não está instalado, instále-o!')
         return
     }
-    
+
     const loadCommands = async () => {
         const readCommand = (rootDir) => {
             const commandFiles = readdirSync(rootDir).filter((file) => file.endsWith('.js'));
@@ -192,7 +235,7 @@ const start = async () => {
             }
             client.log.info('Successfully Loaded commands');
         };
-    
+
         readCommand(join(__dirname, '.', 'commands'));
     };
 
@@ -205,12 +248,12 @@ const start = async () => {
         if (connection === "close") {
             const shouldReconnect =
             (lastDisconnect?.error)?.output.statusCode !== DisconnectReason.loggedOut;
-            
+
             if (connectionAttempts > 4) {
                 logger.error("Não foi possível se conectar ao número especificado")
                 return
             }
-            
+
             client.log.info(`Conexão fechada, reconectando...: ${shouldReconnect}`,event);
             connectionAttempts++
 
@@ -218,7 +261,7 @@ const start = async () => {
                 await start();
             }
         }
-        
+
         if (connection === "open") {
             client.log.info("Chiaki Bot! De pé e operante!", event);
             await loadCommands()
@@ -227,12 +270,19 @@ const start = async () => {
 
     // Entrada de mensagens
     client.ev.on('messages.upsert', async (messages) => {
-        logger.info("messages abaixo")
+        logger.info("mensagens abaixo")
         logger.info(JSON.stringify(messages))
 
+        if (!messages.messages || messages.messages.length === 0) return
         if (messages.type !== 'notify') return;
-        let M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client);
-    
+
+        let M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client)
+
+        if (!M.message) {
+            client.log.warn('Mensagem sem conteúdo:', M)
+            return
+        }
+
         try {
             logger.info("M abaixo:")
             logger.info(JSON.stringify(M))
@@ -252,19 +302,19 @@ const start = async () => {
             }
 
             const { isGroup, sender, from, body } = M;
-    
+
             if (!body || !body.startsWith(client.config.prefix)) return;
-    
+
             const commandText = body.slice(client.config.prefix.length).trim();
             const [cmdName, ...args] = commandText.split(' ');
             const arg = args.filter((x) => !x.startsWith('--')).join(' ');
             const flag = args.filter((x) => x.startsWith('--'));
-    
+
             // Validação de grupo
             let gcMeta = null;
             let groupMembers = [];
             let groupAdmins = [];
-    
+
             if (isGroup && from) {
                 try {
                     gcMeta = await client.groupMetadata(from);
@@ -274,15 +324,15 @@ const start = async () => {
                     client.log.error('Erro ao obter metadata do grupo:', err);
                 }
             }
-    
+
             const command = Array.from(client.cmd.values()).find(cmd =>
                 cmd.command.aliases.includes(cmdName)
             );
-    
+
             if (!command) {
                 return M.reply('💔 *Comando não encontrado!!*');
             }
-    
+
             // Regras de moderação para grupos
             if (isGroup && command.command.category === 'moderation') {
                 if (!groupAdmins.includes(sender)) {
@@ -294,10 +344,10 @@ const start = async () => {
                     return M.reply(`💔 *Desculpe, o ${client.config.name} não é um admin*`);
                 }
             }
-    
+
             client.log.info(`Executando comando: ${command.command.name} para ${M.from}`);
             await command.execute(client, flag, arg, M, messages);
-    
+
         } catch (err) {
             if (err instanceof TypeError) {
                 await client.sendMessage(M.from, { text: "O comando não foi utilizado corretamente." }, { quoted: M })
@@ -306,7 +356,7 @@ const start = async () => {
             client.log.error('Erro ao processar mensagem:', err);
         }
     });
-    
+
 
     // Atualização de grupos
     client.ev.on('group-participants.update', async (event) => {
@@ -334,9 +384,8 @@ const start = async () => {
             mentions: event.participants
         });
     });
-    
+
     return client
 }
 
 start().catch(err => logger.error(err));
-

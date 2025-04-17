@@ -14,6 +14,8 @@ RUN npm install
 
 COPY . .
 
+RUN mkdir -p /app/src/temp
+
 VOLUME [ "/app/session", "/app/logs" ]
 
 CMD ["npm", "run", "start:prod"]
