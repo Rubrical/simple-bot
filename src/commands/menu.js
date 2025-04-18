@@ -9,20 +9,17 @@ module.exports.execute = async (client, flag, arg, M) => {
 
 
             if (item.command.name && item.command.description && item.command.aliases) {
-                let commandInfo = 
-                `
-                *Nome Comando*: ${commandName}; \n
-                *Descrição Comando:* ${commandDescription}; \n
-                *Comando uso:* ${prefix}${commandAliases}; \n
-                \n
-                `
+                let commandInfo =
+                `*🔹 ${commandName}*
+📝 Descrição: ${commandDescription}
+💻 Uso: ${prefix}${commandAliases}
+`
                 commandList.push(commandInfo)
             }
-            
 
         });
 
-        const messageText = commandList.join('');        
+        const messageText = `*📋 LISTA DE COMANDOS DISPONÍVEIS*\n\n${commandList.join('\n')}`;
 
         await client.sendMessage(
             M.from,
@@ -35,8 +32,8 @@ module.exports.execute = async (client, flag, arg, M) => {
 
 
 module.exports.command = {
-    name: 'help',
-    aliases: ['h', 'menu', 'list', 'commands', 'help'],
+    name: 'menu',
+    aliases: [ 'menu'],
     category: 'general',
     usage: '| [cmd]',
     description: 'Mostra lista de comandos'
