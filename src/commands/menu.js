@@ -34,7 +34,7 @@ module.exports.execute = async (client, flag, arg, M) => {
 module.exports.command = {
     name: 'menu',
     aliases: [ 'menu'],
-    category: 'general',
+    category: 'geral',
     usage: '| [cmd]',
     description: 'Mostra lista de comandos'
 }

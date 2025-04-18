@@ -13,7 +13,7 @@ module.exports.execute = async (client, flag, arg, M) => {
 module.exports.command = {
     name: 'delete',
     aliases: ['del'],
-    category: 'moderation',
-    usage: '[quote the bot message]',
+    category: 'moderação',
+    usage: '[Responda (quote) a mensagem]',
     description: 'Deleta a mensagem especificada'
 }

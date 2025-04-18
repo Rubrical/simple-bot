@@ -36,7 +36,7 @@ module.exports.execute = async (client, flag, arg, M) => {
 module.exports.command = {
     name: 'mention all',
     aliases: ['totag'],
-    category: 'moderation',
-    usage: '',
+    category: 'moderação',
+    usage: '[cmd] _Sua bela mensagem_',
     description: 'Menciona todos os membros do grupo de uma só vez.'
 }

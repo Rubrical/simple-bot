@@ -11,8 +11,7 @@ module.exports.execute = async (client, flag, arg, M) => {
 module.exports.command = {
     name: 'remove',
     aliases: ['rem'],
-    exp: 10,
-    category: 'moderation',
-    usage: '[mention user | quote user]',
+    category: 'moderação',
+    usage: '[mencionar usuário | quote usuário]',
     description: 'Remove o usuário especificado. Exemplo: /rem @fulaninho'
 }
