@@ -1,6 +1,6 @@
-import { ChiakiCommand } from "../types";
+import { IChiakiCommand } from "../types";
 
-const deleteMessage: ChiakiCommand = {
+const deleteMessage: IChiakiCommand = {
   command: {
     name: "delete",
     aliases: ["del"],

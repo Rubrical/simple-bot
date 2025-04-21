@@ -1,11 +1,11 @@
-import { ChiakiCommand } from "../types";
+import { IChiakiCommand } from "../types";
 import { Sticker, createSticker, StickerTypes, IStickerOptions } from "wa-sticker-formatter";
 import { randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import logger from "../logger";
 
-const stickerCommand: ChiakiCommand = {
+const stickerCommand: IChiakiCommand = {
     command: {
         name: "sticker",
         aliases: ["s", "figurinha", "stiker", "f"],

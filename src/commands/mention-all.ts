@@ -1,6 +1,6 @@
-import { ChiakiCommand } from "../types";
+import { IChiakiCommand } from "../types";
 
-const mentionAll: ChiakiCommand = {
+const mentionAll: IChiakiCommand = {
   command: {
     name: "mention all",
     aliases: ["totag"],

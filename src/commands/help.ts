@@ -1,7 +1,7 @@
-import { ChiakiCommand, SerializedMessage } from "../types";
+import { IChiakiCommand, SerializedMessage } from "../types";
 
 
-const help: ChiakiCommand = {
+const help: IChiakiCommand = {
     command: {
         name: "help",
         aliases: ["help", "ajuda", "?"],
@@ -23,7 +23,7 @@ const help: ChiakiCommand = {
         }
 
         const commandName = arg.toLowerCase().trim();
-        let command: ChiakiCommand | undefined = client.cmd.get(commandName);
+        let command: IChiakiCommand | undefined = client.cmd.get(commandName);
 
         if (!command) {
             for (const [, cmd] of client.cmd.entries()) {

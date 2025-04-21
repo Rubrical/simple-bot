@@ -1,6 +1,6 @@
-import { ChiakiCommand } from '../types';
+import { IChiakiCommand } from '../types';
 
-const menu: ChiakiCommand = {
+const menu: IChiakiCommand = {
   command: {
     name: 'menu',
     aliases: ['menu'],

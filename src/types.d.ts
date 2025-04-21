@@ -1,12 +1,17 @@
 import { proto, WASocket } from '@whiskeysockets/baileys';
 import { Logger } from 'winston';
 
-
+/**
+ * Configurações do ChiakiBot
+ */
 export type ChiakiConfig = {
     name: string;
     prefix: string
 }
-
+/**
+ * Socket de comunicação com o Whatsapp do Baileys extendido
+ * @extends {WASocket}
+ */
 export type ChiakiClient = WASocket & {
   utils: {
     extractNumbers: (text: string) => string[];
@@ -16,10 +21,13 @@ export type ChiakiClient = WASocket & {
   };
   log: Logger;
   config: ChiakiConfig;
-  cmd: Map<string, ChiakiCommand>;
+  cmd: Map<string, IChiakiCommand>;
 };
 
-
+/**
+ * Tipo mais fácil de se usar para mensagens vindas do whatsapp
+ * @extends {proto.IWebMessageInfo}
+ */
 export type SerializedMessage = proto.IWebMessageInfo & {
   id: string;
   from: string;
@@ -52,7 +60,7 @@ export type SerializedMessage = proto.IWebMessageInfo & {
 
 export type ChiakiCommandCategory = "geral" | "moderação" | "utilidades" | "brincadeiras";
 
-export interface ChiakiCommand {
+export interface IChiakiCommand {
   command: {
     name: string;
     aliases: string[];

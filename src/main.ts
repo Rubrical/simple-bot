@@ -6,7 +6,7 @@ import P from 'pino';
 import logger from './logger';
 import * as utils from './utils/utils';
 import { serialize } from './utils/serialize';
-import { ChiakiClient, ChiakiConfig, ChiakiCommand } from './types';
+import { ChiakiClient, ChiakiConfig, IChiakiCommand } from './types';
 
 function getConfig(): ChiakiConfig {
     return {
@@ -44,7 +44,7 @@ const start = async (): Promise<ChiakiClient | void> => {
             const commandFiles = readdirSync(rootDir).filter((file) => file.endsWith('.ts') || file.endsWith('.js'));
 
             for (const file of commandFiles) {
-                const { default: cmd }: { default: ChiakiCommand } = require(join(rootDir, file));
+                const { default: cmd }: { default: IChiakiCommand } = require(join(rootDir, file));
                 client.cmd.set(cmd.command.name, cmd);
                 client.log.info(`Loaded: ${cmd.command.name.toUpperCase()} from ${file}`);
             }
