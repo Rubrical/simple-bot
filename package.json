@@ -3,8 +3,10 @@
   "version": "0.2.2-ALPHA",
   "main": "index.js",
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start:prod": "node src/index.js"
+    "start:prod": "node src/index.js",
+    "dev": "tsx watch src/main.ts",
+    "build": "tsup src/main.ts --minify",
+    "start": "npm run build && node dist/main.js"
   },
   "keywords": [],
   "author": "Filipe Salviano",
@@ -24,5 +26,11 @@
     "remove.bg": "^1.3.0",
     "wa-sticker-formatter": "^4.4.4",
     "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
   }
 }
