@@ -1,5 +1,6 @@
 import { proto, WASocket } from '@whiskeysockets/baileys';
 import { Logger } from 'winston';
+import { ParticipantAction } from "@whiskeysockets/baileys";
 
 /**
  * Configurações do ChiakiBot
@@ -75,4 +76,22 @@ export interface IChiakiCommand {
     M: SerializedMessage,
     rawMessage: proto.IWebMessageInfo[]
   ): Promise<void>;
+}
+
+/**
+ * Tipo que vem do evento 'group-participants.update'
+ */
+export type GroupParticipantsEventUpdateType = {
+    id: string;
+    author: string;
+    participants: string[];
+    action: ParticipantAction;
+}
+/**
+ * Tipo que vem do event 'messages.upsert'
+ */
+export type MessagesUpsertType = {
+  messages: WAMessage[];
+  type: MessageUpsertType;
+  requestId?: string;
 }
