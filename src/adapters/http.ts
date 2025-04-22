@@ -9,6 +9,7 @@ export interface HttpClient {
     get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
     post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
     put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
+    patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>;
     delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
 }
 
@@ -46,6 +47,7 @@ export const createHttpClient = (baseURL: string): HttpClient => {
         get: <T>(url, config) => request(() => instance.get<T>(url, config)),
         post: <T>(url, data, config) => request(() => instance.post<T>(url, data, config)),
         put: <T>(url, data, config) => request(() => instance.put<T>(url, data, config)),
+        patch: <T>(url, data, config) => request(() => instance.patch<T>(url, data, config)),
         delete: <T>(url, config) => request(() => instance.delete<T>(url, config)),
     };
 };
