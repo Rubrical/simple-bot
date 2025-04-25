@@ -1,6 +1,6 @@
 import { getContentType } from "@whiskeysockets/baileys";
 import logger from "../logger";
-import { ChiakiClient, MessagesUpsertType } from "../types";
+import { ChiakiClient, MessagesUpsertType } from "../types/types";
 import { serialize } from "../utils/serialize";
 
 

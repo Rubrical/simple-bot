@@ -1,5 +1,5 @@
 import { downloadContentFromMessage, getContentType, jidDecode, proto } from "@whiskeysockets/baileys";
-import { ChiakiClient, SerializedMessage } from "../types";
+import { ChiakiClient, SerializedMessage } from "../types/types";
 
 const extractQuotedText = (quotedMsg: any, contentType: string): string => {
     return quotedMsg[contentType]?.text ||

@@ -2,10 +2,12 @@ import makeWASocket, { useMultiFileAuthState, DisconnectReason, getContentType }
 import P from 'pino';
 import logger from './logger';
 import * as utils from './utils/utils';
-import { ChiakiClient, ChiakiConfig, IChiakiCommand } from './types';
+import { ChiakiClient, ChiakiConfig, IChiakiCommand } from './types/types';
 import { ConnectionUpdateEvent } from './events/connection-update-event';
 import { GroupParticipantsEvent } from './events/group-participants-event';
 import { MessageUpsertEvent } from './events/messages-upsert-event';
+import { GroupsUpsert } from './events/groups-upset-event';
+import { GroupsUpdate } from './events/groups-update-event';
 
 function getConfig(): ChiakiConfig {
     return {
@@ -36,9 +38,11 @@ const start = async (): Promise<ChiakiClient | void> => {
     }
 
     client.ev.on('creds.update', saveCreds);
-    client.ev.on('connection.update', async (event) => ConnectionUpdateEvent(event, client, start));
-    client.ev.on('messages.upsert', async (messages) => MessageUpsertEvent(messages, client));
-    client.ev.on('group-participants.update', async (event) => GroupParticipantsEvent(event, client));
+    client.ev.on('connection.update', async (event) => await ConnectionUpdateEvent(event, client, start));
+    client.ev.on('messages.upsert', async (messages) => await MessageUpsertEvent(messages, client));
+    client.ev.on("groups.upsert", async (event) => await GroupsUpsert(event, client));
+    client.ev.on("groups.update", async (event) => await GroupsUpdate(event, client));
+    client.ev.on('group-participants.update', async (event) => await GroupParticipantsEvent(event, client));
 
     return client;
 };

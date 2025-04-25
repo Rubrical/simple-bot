@@ -1,7 +1,7 @@
 import { ConnectionState, DisconnectReason } from "@whiskeysockets/baileys";
 import { Boom } from "@hapi/boom";
 import logger from "../logger";
-import { ChiakiClient } from "../types";
+import { ChiakiClient } from "../types/types";
 import { loadCommands } from "../commands/commands";
 
 

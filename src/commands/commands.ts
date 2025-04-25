@@ -1,4 +1,4 @@
-import { ChiakiClient, IChiakiCommand } from "../types";
+import { ChiakiClient, IChiakiCommand } from "../types/types";
 import deleteMessage from "./delete";
 import help from "./help";
 import mentionAll from "./mention-all";

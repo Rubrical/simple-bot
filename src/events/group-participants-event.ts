@@ -1,11 +1,25 @@
-import { ChiakiClient, GroupParticipantsEventUpdateType } from "../types";
+import { ChiakiClient, GroupParticipantsEventUpdateType } from "../types/types";
 
 export async function GroupParticipantsEvent(
     event: GroupParticipantsEventUpdateType,
     client: ChiakiClient
 ) {
-    client.log.info("----- participantes evento ------ ");
+    client.log.info("----- Evento: Atualização de participantes de grupo ------ ");
     client.log.info(JSON.stringify(event));
+
+    const botFullId = client.user?.id || "";
+    const botJid = botFullId.includes(":")
+        ? botFullId.replace(/:\d+/, "")
+        : botFullId;
+
+    const wasRemoved =
+        event.action === "remove" &&
+        event.participants.some(participant => participant.split(":")[0] === botJid);
+
+    if (wasRemoved) {
+        client.log.info("Bot foi removido do grupo, não acessando metadata.");
+        return;
+    }
 
     const groupMetadata = await client.groupMetadata(event.id);
 
