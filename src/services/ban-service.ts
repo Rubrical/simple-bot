@@ -8,7 +8,7 @@ const routes = {
     createBan: `${url}/create-ban`,
     findBannedUsersFromGroup: `${url}/find-banned-users-from-group`,
     findBan: `${url}/find-ban`,
-    removeBan: `${url}/remove-ban`,
+    removeBan: (remoteJid: string, whatsappGroupId: string) => `${url}/remove-ban/${remoteJid}?groupId=${whatsappGroupId}`,
 };
 
 export const BanService = {
@@ -21,8 +21,8 @@ export const BanService = {
             });
     },
 
-    remove: async (id: string): Promise<boolean | string | null> => {
-        return await api.patch<boolean>(`${routes.removeBan}/${id}`)
+    remove: async (remoteJid: string, groupId: string): Promise<boolean | string | null> => {
+        return await api.patch<boolean>(routes.removeBan(remoteJid, groupId))
             .then((data) => data)
             .catch((error: ChiakiError) => {
                 logger.warn(`Erro ao remover banimento ${JSON.stringify(error)}`);
