@@ -1,6 +1,7 @@
 import logger from '../logger';
 import { api } from './../config/env-config';
 import { GroupUserRequest } from '../types/domain';
+import { ChiakiError } from '../types/ChiakiError';
 
 const url = "users";
 const routes = {
@@ -75,6 +76,15 @@ export const UsersService = {
                 return null;
             });
     },
+    getUser: async (remoteJid: string) => {
+        return await api.get<UserResponse>(routes.getUser, { data: { id: remoteJid } })
+            .then((data) => data)
+            .catch((err: ChiakiError) => {
+                logger.warn(err)
+                if (err.code === 404) return null; //Usuário não cadastrado no banco
+                return false;
+            });
+    }
 };
 
 enum UserRoleEnum {
@@ -92,4 +102,18 @@ export type UpdatedUserRequest = {
     remoteJid: string;
     userName: string;
     userRoleEnum: UserRoleEnum;
+}
+
+export type UserResponse = {
+    remoteJid: string;
+    nome: string;
+    gruposParticipantes: Array<GroupStatus>;
+    quantidadeGruposParticipa: number;
+    dataCadastro: Date;
+}
+
+type GroupStatus = {
+    nomeGrupo: string;
+    grupoRemoteJid: string;
+    estadoGrupo: boolean;
 }
