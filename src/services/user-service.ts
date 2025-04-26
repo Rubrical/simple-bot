@@ -35,10 +35,10 @@ export const UsersService = {
             });
     },
     incrementCommands: async (groupUser: GroupUserRequest) => {
-        return await api.post<boolean>(routes.incrementMessages, groupUser)
-            .then((messages) => {
+        return await api.post<boolean>(routes.incrementCommands, groupUser)
+            .then((commands) => {
                 logger.info(`Incremento de comandos bem-sucessedido`);
-                return messages;
+                return commands;
             })
             .catch((err) => {
                 logger.warn(`Não foi possível aumentar o número de mensagens do usuário.\n ${err}`);
