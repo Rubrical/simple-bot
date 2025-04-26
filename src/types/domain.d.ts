@@ -40,7 +40,36 @@ export type Message = {
     midia?: string|null;
 }
 
+export type Advertence = {
+    advertenciaQuantidade: number;
+    dataUltimaAdvertencia: Date;
+    motivoAdvertencia: string;
+    nomeGrupo: string;
+    nomeUsuario: string;
+    usuarioRemoteJid: string;
+    idGrupoWhatsapp: string;
+}
+
+export type Ban = {
+    id: number;
+    dataCadastro: Date;
+    dataInativo?: Date|null;
+    userRemoteJid: string;
+    motivoBan?: string|null;
+}
+
 export type GroupUserRequest = {
     remoteJid: string;
     whatsappGroupId: string;
+}
+
+export enum JidType {
+    GROUP = 'group',
+    PRIVATE = 'private',
+    UNKNOWN = 'unknown'
+}
+
+export type JidInfo = {
+    phoneNumber: string;
+    type: JidType;
 }

@@ -9,8 +9,10 @@ const routes = {
     newGroup: () => `${url}/new-group`,
     updateGroup: (id:string) => `${url}/update-group/${id}`,
     inactivateGroup: (id: string) => `${url}/inactivate-group/${id}`,
+    reactivateGroup: (id: string) => `${url}/reactivate-group/${id}`,
     addUserToGroup: () => `${url}/add-user-to-group`,
     inactivateUserFromGroup: () => `${url}/inactivate-user-from-group`,
+    reactivateUserFromGroup: () => `${url}/reactivate-user-from-group`,
 
     getReport: (id: string) => `${url}/get-report/${id}`,
     allGroupsCount: () => `${url}/all-groups-count`,
@@ -29,62 +31,93 @@ const routes = {
 
 
 export const GroupsService = {
-    createNewGroup: async (group: GroupRequest) => {
+    createNewGroup: async (group: GroupRequest): Promise<Group|boolean|null> => {
         return await api.post<Group>(routes.newGroup(), group)
             .then((data) => {
                 logger.info("Grupo cadastrado com sucesso");
                 logger.info(`${JSON.stringify(data)}`);
                 return data;
             })
-            .catch((err) => {
+            .catch((err: ChiakiError) => {
                 logger.warn(`Erro ao cadastrar novo grupo: ${JSON.stringify(err)}`);
+
+                if (err.code === 400) return false
                 return null;
             });
     },
-    updateGroup: async (updateGroup: GroupRequest) => {
-        return await api.post<Group>(routes.newGroup(), updateGroup)
+    updateGroup: async (id: string, updateGroup: GroupRequest): Promise<Group|null> => {
+        return await api.post<Group>(routes.updateGroup(id), updateGroup)
             .then((data) => {
                 logger.info("Grupo cadastrado com sucesso");
                 logger.info(`${JSON.stringify(data)}`);
+                return data;
             })
-            .catch((err) => {
+            .catch((err: ChiakiError) => {
                 logger.warn(`Erro ao cadastrar novo grupo: ${JSON.stringify(err)}`);
                 return null;
             });
     },
-    inactivateGroup: async (id: string) => {
+    inactivateGroup: async (id: string): Promise<Group|null> => {
         return await api.post<Group>(routes.inactivateGroup(id))
             .then((data) => {
                 logger.info("Grupo inativado");
                 logger.info(`${JSON.stringify(data)}`);
                 return data;
             })
-            .catch((err) => {
+            .catch((err: ChiakiError) => {
                 logger.warn("Erro ao inativar grupo");
                 logger.warn(`${JSON.stringify(err)}`);
+                return null;
             });
     },
-    addUserToGroup: async (data: UserToGroupRequest) => {
+    reactivateGroup: async (id: string): Promise<Group|null> => {
+        return await api.post<Group>(routes.reactivateGroup(id))
+            .then((data) => {
+                logger.info("Grupo reativado");
+                logger.info(`${JSON.stringify(data)}`);
+                return data;
+            })
+            .catch((err: ChiakiError) => {
+                logger.warn("Erro ao reativar grupo");
+                logger.warn(`${JSON.stringify(err)}`);
+                return null;
+            });
+    },
+    addUserToGroup: async (data: UserToGroupRequest): Promise<GroupUser|null> => {
         return await api.post<GroupUser>(routes.addUserToGroup(), data)
             .then((data) => {
                 logger.info(`Novo usuário no grupo **${data.grupo.nomeGrupo}**`);
                 return data;
             })
-            .catch((err) => {
+            .catch((err: ChiakiError) => {
                 logger.warn("Erro ao adicionar usuário a grupo");
+                logger.warn(`${JSON.stringify(err)}`);
                 return null;
             });
     },
-    inactivateUserFromGroup: async (data: UserToGroupRequest) => {
+    inactivateUserFromGroup: async (data: UserToGroupRequest): Promise<GroupUser|null> => {
         return await api.post<GroupUser>(routes.inactivateUserFromGroup(), data)
             .then((data) => {
                 logger.info(`Usuário ${data.usuario.remoteJid} acaba de sair do grupo ${data.grupo.nomeGrupo}`);
                 return data;
             })
-            .catch((err) => {
+            .catch((err: ChiakiError) => {
                 logger.warn("Erro ao remover usuário do grupo");
+                logger.warn(`${JSON.stringify(err)}`);
                 return null;
             })
+    },
+    reactivateUserFromGroup: async (data: UserToGroupRequest): Promise<GroupUser|null> => {
+        return await api.post<GroupUser>(routes.inactivateUserFromGroup(), data)
+            .then((data) => {
+                logger.info(`Usuário ${data.usuario.remoteJid} acaba de sair do grupo ${data.grupo.nomeGrupo}`);
+                return data;
+            })
+            .catch((err: ChiakiError) => {
+                logger.warn("Erro ao remover usuário do grupo");
+                logger.warn(`${JSON.stringify(err)}`);
+                return null;
+            });
     },
 
     groupReport: async (id: string) => {
@@ -110,7 +143,7 @@ export const GroupsService = {
             });
     },
 
-    activateWelcome: async (groupId: string) => {
+    activateWelcome: async (groupId: string): Promise<string> => {
         return await api.patch<string>(routes.activateWelcome(groupId))
             .then((data) => data)
             .catch((err: ChiakiError) => {
@@ -118,7 +151,7 @@ export const GroupsService = {
                 return err.message;
             });
     },
-    inactivateWelcome: async (groupId: string) => {
+    inactivateWelcome: async (groupId: string): Promise<string> => {
         return await api.patch<string>(routes.inactivateWelcome(groupId))
             .then((data) => data)
             .catch((err: ChiakiError) => {
@@ -126,7 +159,7 @@ export const GroupsService = {
                 return err.message;
             });
     },
-    activateGoodbye: async (groupId: string) => {
+    activateGoodbye: async (groupId: string): Promise<string> => {
         return await api.patch<string>(routes.activateGoodbye(groupId))
             .then((data) => data)
             .catch((err: ChiakiError) => {
@@ -134,7 +167,7 @@ export const GroupsService = {
                 return err.message;
             });
     },
-    inactivateGoodbye: async (groupId: string) => {
+    inactivateGoodbye: async (groupId: string): Promise<string> => {
         return await api.patch<string>(routes.inactivateGoodbye(groupId))
         .then((data) => data)
         .catch((err: ChiakiError) => {
@@ -143,7 +176,7 @@ export const GroupsService = {
         });
     },
 
-    verifyMessageStatus: async (groupId: string) => {
+    verifyMessageStatus: async (groupId: string): Promise<string | MessagesStatus> => {
         return await api.get<MessagesStatus>(routes.checkMessagesStatus(groupId))
             .then((data) => data)
             .catch((err: ChiakiError) => {
@@ -151,7 +184,7 @@ export const GroupsService = {
                 return err.message;
             });
     },
-    editWelcomeMessage: async (message: MessageEdit) => {
+    editWelcomeMessage: async (message: MessageEdit): Promise<string | Message> => {
         return await api.patch<Message>(routes.editWelcomeMessage(), message)
             .then((data) => data)
             .catch((err: ChiakiError) => {
@@ -159,7 +192,7 @@ export const GroupsService = {
                 return err.message;
             });
     },
-    editGoodbyeMessage: async (message: MessageEdit) => {
+    editGoodbyeMessage: async (message: MessageEdit): Promise<string | Message> => {
         return await api.patch<Message>(routes.editGoodbyeMessage(), message)
             .then((data) => data)
             .catch((err: ChiakiError) => {

@@ -1,6 +1,7 @@
 import { proto, WASocket } from '@whiskeysockets/baileys';
 import { Logger } from 'winston';
 import { ParticipantAction } from "@whiskeysockets/baileys";
+import { JidInfo } from './domain';
 
 /**
  * Configurações do ChiakiBot
@@ -19,6 +20,7 @@ export type ChiakiClient = WASocket & {
     extractUrls: (text: string) => string[];
     removeDuplicates: <T>(arr: T[]) => T[];
     verifyIfFFMPEGisInstalled(): Promise<boolean>;
+    validateRemoteJid(remoteJid: string): JidInfo;
   };
   log: Logger;
   config: ChiakiConfig;

@@ -6,7 +6,7 @@ import { ChiakiClient, ChiakiConfig, IChiakiCommand } from './types/types';
 import { ConnectionUpdateEvent } from './events/connection-update-event';
 import { GroupParticipantsEvent } from './events/group-participants-event';
 import { MessageUpsertEvent } from './events/messages-upsert-event';
-import { GroupsUpsert } from './events/groups-upset-event';
+import { GroupsUpsert } from './events/groups-upsert-event';
 import { GroupsUpdate } from './events/groups-update-event';
 
 function getConfig(): ChiakiConfig {

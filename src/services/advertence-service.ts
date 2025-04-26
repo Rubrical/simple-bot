@@ -1,0 +1,42 @@
+import { api } from "../config/env-config";
+import logger from "../logger";
+import { ChiakiError } from "../types/ChiakiError";
+import { Advertence } from "../types/domain";
+
+const url = "advertences";
+const routes = {
+    newAdvertence: `${url}/add-advertence`,
+    removeAdvertence: `${url}/remove-advertence`,
+}
+
+export const AdvertenceService = {
+    add: async (req: CreateAdvertenceRequest): Promise<Advertence|string|null> => {
+        return await api.post<Advertence>(routes.newAdvertence, req)
+            .then((data) => data)
+            .catch((error: ChiakiError) => {
+                if (error.code === 409) return error.message;
+                return null
+            });
+    },
+    remove: async (req: FindAdvertenceRequest): Promise<boolean|string|null> => {
+        return await api.post<boolean>(routes.newAdvertence, req)
+        .then((data) => data)
+        .catch((error: ChiakiError) => {
+            logger.warn(`Erro ao remover advertência ${JSON.stringify(error)}`);
+            if (error.code === 500) return error.message;
+            return null;
+        });
+    },
+}
+
+export type CreateAdvertenceRequest = {
+    userRemoteJid: string;
+    whatsappGroupId: string;
+    reason: string;
+}
+
+export type FindAdvertenceRequest = {
+    userRemoteJid: string;
+    whatsappGroupId: string;
+    activeAdvertences: boolean;
+}

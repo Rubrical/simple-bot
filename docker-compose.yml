@@ -2,6 +2,9 @@ services:
   bot:
     image: chiaki-bot:latest
     build: .
+    environment:
+      - PREFIX=/
+      - BACKEND_URL=http://localhost:3000/api/
     volumes:
       - ./data:/app/session:rw
       - ./data2:/app/logs:rw
