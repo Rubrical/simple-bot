@@ -1,5 +1,6 @@
 import logger from '../logger';
 import { api } from './../config/env-config';
+import { GroupUserRequest } from '../types/domain';
 
 const url = "users";
 const routes = {
@@ -14,7 +15,7 @@ const routes = {
 
 export const UsersService = {
     newUser: async (user: UserRequest) => {
-        return await api.post(routes.newUser, user)
+        return await api.post<UserRequest>(routes.newUser, user)
             .then((createdUser) => {
                 logger.info(`Novo usuário criado: ${JSON.stringify(createdUser)}`);
                 return true;
@@ -23,25 +24,72 @@ export const UsersService = {
                 return false;
             });
     },
-    incrementMessages: async () => {},
-    incrementCommands: async () => {},
-    userInfo: async () => {},
-    newAdmin: async () => {},
-    updateUser: async () => {},
+    incrementMessages: async (groupUser: GroupUserRequest) => {
+        return await api.post<boolean>(routes.incrementMessages, groupUser)
+            .then((messages) => {
+                logger.info(`Incremento de mensagens bem-sucessedido`);
+                return messages;
+            })
+            .catch((err) => {
+                logger.warn(`Não foi possível aumentar o número de mensagens do usuário.\n ${err}`);
+            });
+    },
+    incrementCommands: async (groupUser: GroupUserRequest) => {
+        return await api.post<boolean>(routes.incrementMessages, groupUser)
+            .then((messages) => {
+                logger.info(`Incremento de comandos bem-sucessedido`);
+                return messages;
+            })
+            .catch((err) => {
+                logger.warn(`Não foi possível aumentar o número de mensagens do usuário.\n ${err}`);
+            });
+    },
+    userInfo: async (remoteJid: string) => {
+        return await api.get<UserRequest>(routes.getUser, { data: { remoteJid: remoteJid} })
+            .then((data) => {
+                logger.info("Informação do usuário retornada");
+                return data;
+            })
+            .catch((err) => {
+                logger.warn("Um erro ocorreu");
+                return null;
+            });
+    },
+    newAdmin: async (user: UserRequest) => {
+        return await api.post<UserRequest>(routes.newUser, user)
+            .then((createdUser) => {
+                logger.info(`Novo admin criado: ${JSON.stringify(createdUser)}`);
+                return createdUser;
+            }).catch((err) => {
+                logger.warn(err.message);
+                return null;
+            });
+    },
+    updateUser: async (updatedUser: UpdatedUserRequest) => {
+        return await api.post<UserRequest>(routes.updateUser, updatedUser)
+            .then((updatedUser) => {
+                logger.info(`Usuário atualizado: ${JSON.stringify(updatedUser)}`);
+                return updatedUser;
+            }).catch((err) => {
+                logger.warn(err.message);
+                return null;
+            });
+    },
 };
+
+enum UserRoleEnum {
+    DONO = 1,
+    ADMINISTRADOR = 2,
+    COMUM = 3,
+}
 
 export type UserRequest = {
     remoteJid: string;
     userName: string;
 }
 
-export type NewUserResponse = {}
-
-export type User = {
-    id: number;
-    dataCadastro: Date;
-    dataInativo?: Date|null;
+export type UpdatedUserRequest = {
     remoteJid: string;
-    nome: string;
-    tipoUsuario: number;
+    userName: string;
+    userRoleEnum: UserRoleEnum;
 }

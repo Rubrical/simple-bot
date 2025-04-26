@@ -4,6 +4,7 @@ import axios, {
     AxiosResponse,
     AxiosError,
 } from "axios";
+import { ChiakiError } from "../types/ChiakiError";
 
 export interface HttpClient {
     get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>;
@@ -16,15 +17,15 @@ export interface HttpClient {
 const handleError = (error: AxiosError): never => {
     if (error.response) {
         const { status, data } = error.response;
-        const message = typeof data === "string" 
-            ? data 
-            : (data as { message?: string })?.message 
+        const message = typeof data === "string"
+            ? data
+            : (data as { message?: string })?.message
             || "Erro inesperado";
 
-        throw new Error(`[${status}] ${message}`);
+        throw new ChiakiError(message, status);
     }
 
-    throw new Error("Erro de conexão ou resposta inválida");
+    throw new ChiakiError("Erro de conexão ou resposta inválida");
 };
 
 export const createHttpClient = (baseURL: string): HttpClient => {
