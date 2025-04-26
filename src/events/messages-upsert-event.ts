@@ -3,6 +3,7 @@ import logger from "../logger";
 import { ChiakiClient, MessagesUpsertType } from "../types/types";
 import { serialize } from "../utils/serialize";
 import { UsersService } from "../services/user-service";
+import { UserTypeEnum } from '../../../ChiakiBot-API/src/shared/enums/user-type-enum';
 
 
 export async function MessageUpsertEvent(messages: MessagesUpsertType, client: ChiakiClient) {
@@ -25,6 +26,23 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
     if (!from || !sender) return;
 
     try {
+        const user = await UsersService.getUser(sender);
+
+        if (user === false) {
+            client.log.warn(`Aviso: erro em getUser`);
+        } else if (user === null && M.key) {
+            await UsersService.newUser({
+                remoteJid: sender,
+                userName: M.pushName
+            });
+        } else if (typeof user !== "boolean" && user.nome === "S/N") {
+            await UsersService.updateUser({
+                remoteJid: sender,
+                userName: M.pushName,
+                userRoleEnum: 3,
+            });
+        }
+
         if (!body) {
             if (isGroup) await UsersService.incrementMessages({ whatsappGroupId: from, remoteJid: sender });
             return;
