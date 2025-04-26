@@ -1,6 +1,6 @@
 import * as linkify from 'linkifyjs'
 import { spawn } from 'node:child_process'
-import { JidInfo, JidType } from '../types/domain';
+import { JidInfo, JidType } from '../types/domain.d';
 
 export const extractNumbers = (content: string): string[] => {
   const numbers = content.match(/-?\d+/g);

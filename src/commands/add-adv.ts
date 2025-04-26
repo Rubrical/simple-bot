@@ -4,7 +4,7 @@ import { AdvertenceService } from "../services/advertence-service";
 
 const addAdvertence: IChiakiCommand = {
     command: {
-        name: "Adiciona-Advertência",
+        name: "add-adv",
         aliases: ["add-adv"],
         category: "moderação",
         usage: "add-adv @9999999999 (motivo)",

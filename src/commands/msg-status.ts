@@ -4,7 +4,7 @@ import { IChiakiCommand, ChiakiClient, SerializedMessage } from "../types/types"
 
 const msgStatus: IChiakiCommand = {
     command: {
-        name: "Status Mensagens",
+        name: "status-mensagens",
         aliases: ["msg-status"],
         category: "moderação",
         usage: "msg-status",

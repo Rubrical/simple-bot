@@ -4,7 +4,7 @@ import { IChiakiCommand, ChiakiClient, SerializedMessage } from "../types/types"
 
 const atBv: IChiakiCommand = {
     command: {
-        name: "Ativar/Desativar Boas-Vindas",
+        name: "at-bv",
         aliases: ["at-bv"],
         category: "moderação",
         usage: "at-bv 1 (ativa) ou at-bv 0 (desativa)",

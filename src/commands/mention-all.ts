@@ -2,7 +2,7 @@ import { IChiakiCommand } from "../types/types";
 
 const mentionAll: IChiakiCommand = {
   command: {
-    name: "mention all",
+    name: "mention-all",
     aliases: ["totag"],
     category: "moderação",
     usage: "totag {mensagem}",

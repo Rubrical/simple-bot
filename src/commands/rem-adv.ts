@@ -4,7 +4,7 @@ import { ChiakiClient, IChiakiCommand, SerializedMessage } from "../types/types"
 
 const removeAdvertence: IChiakiCommand = {
     command: {
-        name: "Remove-Advertência",
+        name: "rem-adv",
         aliases: ["rem-adv"],
         category: "moderação",
         usage: "rem-adv @9999999999",

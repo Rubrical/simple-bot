@@ -5,7 +5,7 @@ import { IChiakiCommand, ChiakiClient, SerializedMessage } from "../types/types"
 
 const unbanUser: IChiakiCommand = {
     command: {
-        name: "Desbanir",
+        name: "unban",
         aliases: ["unban"],
         category: "moderação",
         usage: "unban @99999999",

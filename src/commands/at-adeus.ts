@@ -4,7 +4,7 @@ import { IChiakiCommand, ChiakiClient, SerializedMessage } from "../types/types"
 
 const atAdeus: IChiakiCommand = {
     command: {
-        name: "Ativar/Desativar Mensagem de Adeus",
+        name: "at-adeus",
         aliases: ["at-adeus"],
         category: "moderação",
         usage: "at-adeus 1 (ativa) ou at-adeus 0 (desativa)",

@@ -4,7 +4,7 @@ import { IChiakiCommand, ChiakiClient, SerializedMessage } from "../types/types"
 
 const editBv: IChiakiCommand = {
     command: {
-        name: "Editar Boas-Vindas",
+        name: "edit-bv",
         aliases: ["edit-bv"],
         category: "moderação",
         usage: "edit-bv <nova mensagem>",

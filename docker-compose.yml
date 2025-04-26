@@ -4,7 +4,18 @@ services:
     build: .
     environment:
       - PREFIX=/
-      - BACKEND_URL=http://localhost:3000/api/
+      - BACKEND_URL=http://api:3000/api/
     volumes:
       - ./data:/app/session:rw
       - ./data2:/app/logs:rw
+
+  api:
+    image: chiakibot-api:latest
+    container_name: chiakibot-api
+    ports:
+      - "3000:3000"
+    volumes:
+      - /home/lipian/projects/chiaki-bot-project/banco:/usr/src/app/database
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

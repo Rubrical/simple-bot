@@ -4,7 +4,7 @@ import { IChiakiCommand, ChiakiClient, SerializedMessage } from "../types/types"
 
 const rank: IChiakiCommand = {
     command: {
-        name: "Ranking",
+        name: "rank",
         aliases: ["rank"],
         category: "moderação",
         usage: "rank [quantidade]",
