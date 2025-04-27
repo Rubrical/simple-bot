@@ -26,4 +26,6 @@ RUN mkdir -p /app/src/temp
 
 VOLUME [ "/app/session", "/app/logs" ]
 
+EXPOSE 3000
+
 CMD ["node", "dist/main.js"]
