@@ -77,7 +77,7 @@ io.on("connection", (socket) => {
         logger.info('Cliente desconectado do Socket.io');
     });
 });
-server.listen(3001, () => {
+server.listen(3001, "0.0.0.0", () => {
     logger.info(`Servidor WebSocket rodando na porta 3001!`);
 });
 
