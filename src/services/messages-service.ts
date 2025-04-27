@@ -8,7 +8,7 @@ const routes = {
 
 export const MessageService = {
     getMessage: async (msgType: MessageType, groupName: string): Promise<Message|null> => {
-        return await api.get<Message>(routes.getMessage(`${msgType}/${groupName}`))
+        return await api.get<Message>(routes.getMessage(`${msgType}:${groupName}`))
             .then((data) => data)
             .catch((err) => null);
     }

@@ -8,6 +8,8 @@ services:
     volumes:
       - ./data:/app/session:rw
       - ./data2:/app/logs:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
   api:
     image: chiakibot-api:latest
@@ -15,7 +17,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /home/lipian/projects/chiaki-bot-project/banco:/usr/src/app/database
+      - /home/lipian/projects/chiaki-bot-project/banco:/usr/src/app/database:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     environment:
       - NODE_ENV=production
     restart: unless-stopped

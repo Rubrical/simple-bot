@@ -3,7 +3,6 @@ import logger from "../logger";
 import { ChiakiClient, MessagesUpsertType } from "../types/types";
 import { serialize } from "../utils/serialize";
 import { UsersService } from "../services/user-service";
-import { UserTypeEnum } from '../../../ChiakiBot-API/src/shared/enums/user-type-enum';
 
 
 export async function MessageUpsertEvent(messages: MessagesUpsertType, client: ChiakiClient) {
@@ -26,18 +25,19 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
     if (!from || !sender) return;
 
     try {
-        const user = await UsersService.getUser(sender);
+        const remoteJid = client.utils.validateRemoteJid(sender).phoneNumber;
+        const user = await UsersService.getUser(remoteJid);
 
         if (user === false) {
             client.log.warn(`Aviso: erro em getUser`);
-        } else if (user === null && M.key) {
+        } else if (user === null && remoteJid) {
             await UsersService.newUser({
                 remoteJid: sender,
                 userName: M.pushName
             });
         } else if (typeof user !== "boolean" && user.nome === "S/N") {
             await UsersService.updateUser({
-                remoteJid: sender,
+                remoteJid: remoteJid,
                 userName: M.pushName,
                 userRoleEnum: 3,
             });

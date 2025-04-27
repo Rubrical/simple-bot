@@ -71,7 +71,7 @@ export const GroupsService = {
             });
     },
     reactivateGroup: async (id: string): Promise<Group|null> => {
-        return await api.post<Group>(routes.reactivateGroup(id))
+        return await api.patch<Group>(routes.reactivateGroup(id))
             .then((data) => {
                 logger.info("Grupo reativado");
                 logger.info(`${JSON.stringify(data)}`);
@@ -89,32 +89,32 @@ export const GroupsService = {
                 logger.info(`Novo usuário no grupo **${data.grupo.nomeGrupo}**`);
                 return data;
             })
-            .catch((err: ChiakiError) => {
+            .catch((err) => {
                 logger.warn("Erro ao adicionar usuário a grupo");
                 logger.warn(`${JSON.stringify(err)}`);
                 return null;
             });
     },
     inactivateUserFromGroup: async (data: UserToGroupRequest): Promise<GroupUser|null> => {
-        return await api.post<GroupUser>(routes.inactivateUserFromGroup(), data)
+        return await api.put<GroupUser>(routes.inactivateUserFromGroup(), data)
             .then((data) => {
                 logger.info(`Usuário ${data.usuario.remoteJid} acaba de sair do grupo ${data.grupo.nomeGrupo}`);
                 return data;
             })
-            .catch((err: ChiakiError) => {
+            .catch((err) => {
                 logger.warn("Erro ao remover usuário do grupo");
                 logger.warn(`${JSON.stringify(err)}`);
                 return null;
             })
     },
     reactivateUserFromGroup: async (data: UserToGroupRequest): Promise<GroupUser|null> => {
-        return await api.post<GroupUser>(routes.inactivateUserFromGroup(), data)
+        return await api.put<GroupUser>(routes.reactivateUserFromGroup(), data)
             .then((data) => {
-                logger.info(`Usuário ${data.usuario.remoteJid} acaba de sair do grupo ${data.grupo.nomeGrupo}`);
+                logger.info(`Usuário ${data.usuario.remoteJid} acaba de voltar pro grupo ${data.grupo.nomeGrupo}`);
                 return data;
             })
-            .catch((err: ChiakiError) => {
-                logger.warn("Erro ao remover usuário do grupo");
+            .catch((err) => {
+                logger.warn("Erro ao reativar usuário do grupo");
                 logger.warn(`${JSON.stringify(err)}`);
                 return null;
             });
@@ -207,7 +207,7 @@ export type GroupRequest = {
     whatsappGroupId: string;
     nomeGrupo: string;
     donoGrupoId: string|null;
-    descriacaoGrupo: string|null;
+    descricaoGrupo: string|null;
 }
 
 export type UserToGroupRequest = {

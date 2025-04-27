@@ -90,7 +90,7 @@ export function serialize(M: proto.IWebMessageInfo, client: ChiakiClient): Seria
 
     const rawMessage = special.message;
     const type = special.type;
-    const body = extractMessageBody(rawMessage, type);
+    const body = rawMessage && type ? extractMessageBody(rawMessage, type) : "";
 
     let quoted: SerializedMessage['quoted'] = null;
     try {
@@ -118,7 +118,7 @@ export function serialize(M: proto.IWebMessageInfo, client: ChiakiClient): Seria
                 message: quotedMsg,
                 mtype: quotedContentType,
                 isSelf: participant === decodeJid(client.user.id),
-                text: extractQuotedText(quotedMsg, quotedContentType),
+                text: quotedMsg && quotedContentType ? extractQuotedText(quotedMsg, quotedContentType): "",
                 key: {
                     id: context.stanzaId,
                     fromMe: participant === decodeJid(client.user.id),
