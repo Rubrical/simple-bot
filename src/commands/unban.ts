@@ -12,15 +12,26 @@ const unbanUser: IChiakiCommand = {
         description: "Remove o banimento de um usuário pelo ID do ban.",
     },
     execute: async function (client: ChiakiClient, flag: string[], arg: string, M: SerializedMessage, rawMessage: proto.IWebMessageInfo[]): Promise<void> {
-        const numero = M.mentions[0];
         const groupId = M.from;
+        const mentionedUser = M.mentions?.[0];
+        let remoteJid: string | null = null;
 
-        if (!numero) {
-            await M.reply("Você precisa marcar o usuário para desbanir.");
+        if (!M.isGroup) {
+            await M.reply("Este comando só pode ser usado em grupos.");
             return;
         }
 
-        const result = await BanService.remove(numero, groupId);
+        if (mentionedUser) {
+            remoteJid = client.utils.validateRemoteJid(mentionedUser).phoneNumber;
+        } else if (arg) {
+            const cleanArg = arg.replace(/\D/g, "");
+            remoteJid = client.utils.validateRemoteJid(cleanArg).phoneNumber;
+        } else {
+            await M.reply("Você precisa marcar ou informar o número do usuário para desbanir.");
+            return;
+        }
+
+        const result = await BanService.remove(remoteJid, groupId);
 
         if (typeof result === "string") {
             await M.reply(result);

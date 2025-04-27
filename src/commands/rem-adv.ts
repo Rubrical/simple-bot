@@ -12,19 +12,20 @@ const removeAdvertence: IChiakiCommand = {
     },
     execute: async function (client: ChiakiClient, flag: string[], arg: string, M: SerializedMessage, rawMessage: proto.IWebMessageInfo[]): Promise<void> {
         const mentionedUser = M.mentions?.[0];
-
-        if (!mentionedUser) {
-            await M.reply("Você precisa marcar um usuário para remover advertência.");
-            return;
-        }
+        const remoteJid = client.utils.validateRemoteJid(mentionedUser).phoneNumber;
 
         if (!M.isGroup) {
             await M.reply("Este comando só pode ser usado em grupos.");
             return;
         }
 
+        if (!mentionedUser) {
+            await M.reply("Você precisa marcar um usuário para remover advertência.");
+            return;
+        }
+
         const response = await AdvertenceService.remove({
-            userRemoteJid: mentionedUser,
+            userRemoteJid: remoteJid,
             whatsappGroupId: M.from,
             activeAdvertences: true,
         });

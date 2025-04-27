@@ -6,7 +6,7 @@ import { Ban } from "../types/domain";
 const url = "ban";
 const routes = {
     createBan: `${url}/create-ban`,
-    findBannedUsersFromGroup: `${url}/find-banned-users-from-group`,
+    findBannedUsersFromGroup: (groupId: string) => `${url}/find-banned-users-from-group/${groupId}`,
     findBan: `${url}/find-ban`,
     removeBan: (remoteJid: string, whatsappGroupId: string) => `${url}/remove-ban/${remoteJid}?groupId=${whatsappGroupId}`,
 };

@@ -30,6 +30,7 @@ export async function GroupParticipantsEvent(
     const messageStatus = await GroupsService.verifyMessageStatus(event.id);
     const groupMetadata = await client.groupMetadata(event.id);
     let text: string|null = null;
+    let wasUserBanned = false;
 
     if (event.action === "add") {
         for (const participant of event.participants) {
@@ -40,6 +41,7 @@ export async function GroupParticipantsEvent(
 
             if (ban) {
                 client.log.info(`Usuário ${parsedJid} banido anteriormente. Removendo do grupo...`);
+                wasUserBanned = true;
                 try {
                     await client.groupParticipantsUpdate(event.id, [participant], "remove");
                 } catch (err) {
@@ -76,6 +78,8 @@ export async function GroupParticipantsEvent(
         }
     } else if (event.action === "remove") {
         for (const participant of event.participants) {
+            if (wasUserBanned) return;
+
             const parsedJid = client.utils.validateRemoteJid(participant).phoneNumber;
             const res = await GroupsService.inactivateUserFromGroup({ groupId: event.id, userId: parsedJid });
             const message = await MessageService.getMessage("goodbye-message", groupMetadata.subject);

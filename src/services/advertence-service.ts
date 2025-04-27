@@ -3,7 +3,7 @@ import logger from "../logger";
 import { ChiakiError } from "../types/ChiakiError";
 import { Advertence } from "../types/domain";
 
-const url = "advertences";
+const url = "advertence";
 const routes = {
     newAdvertence: `${url}/add-advertence`,
     removeAdvertence: `${url}/remove-advertence`,
@@ -13,15 +13,16 @@ export const AdvertenceService = {
     add: async (req: CreateAdvertenceRequest): Promise<Advertence|string|null> => {
         return await api.post<Advertence>(routes.newAdvertence, req)
             .then((data) => data)
-            .catch((error: ChiakiError) => {
+            .catch((error) => {
                 if (error.code === 409) return error.message;
+                logger.error(`${JSON.stringify(error)}`);
                 return null
             });
     },
     remove: async (req: FindAdvertenceRequest): Promise<boolean|string|null> => {
-        return await api.post<boolean>(routes.newAdvertence, req)
+        return await api.patch<boolean>(routes.removeAdvertence, req)
         .then((data) => data)
-        .catch((error: ChiakiError) => {
+        .catch((error) => {
             logger.warn(`Erro ao remover advertência ${JSON.stringify(error)}`);
             if (error.code === 500) return error.message;
             return null;
