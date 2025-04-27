@@ -6,7 +6,7 @@ import { UsersService } from "../services/user-service";
 
 
 export async function MessageUpsertEvent(messages: MessagesUpsertType, client: ChiakiClient) {
-    logger.info("mensagens abaixo");
+    logger.info("---- Mensagens abaixo -----");
     logger.info(JSON.stringify(messages));
 
     if (!messages.messages?.length || messages.type !== 'notify') return;
@@ -27,6 +27,8 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
     try {
         const remoteJid = client.utils.validateRemoteJid(sender).phoneNumber;
         const user = await UsersService.getUser(remoteJid);
+        client.log.info(`${M.pushName}`);
+        client.log.info(`${JSON.stringify(user)}`);
 
         if (user === false) {
             client.log.warn(`Aviso: erro em getUser`);
@@ -38,8 +40,8 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
         } else if (typeof user !== "boolean" && user.nome === "S/N") {
             await UsersService.updateUser({
                 remoteJid: remoteJid,
-                userName: M.pushName,
-                userRoleEnum: 3,
+                name: M.pushName,
+                roleEnum: 3,
             });
         }
 

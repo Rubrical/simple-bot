@@ -100,8 +100,8 @@ export type UserRequest = {
 
 export type UpdatedUserRequest = {
     remoteJid: string;
-    userName: string;
-    userRoleEnum: UserRoleEnum;
+    name: string;
+    roleEnum: UserRoleEnum;
 }
 
 export type UserResponse = {

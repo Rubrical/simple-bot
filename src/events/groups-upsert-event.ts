@@ -22,7 +22,7 @@ export async function GroupsUpsert(data: GroupMetadata[], client: ChiakiClient):
         const newGroup = await GroupsService.createNewGroup({
             donoGrupoId: group.owner,
             nomeGrupo: group.subject,
-            descricaoGrupo: group.desc, // não está chegando a descriçãoGrupo no back-end
+            descricaoGrupo: group.desc,
             whatsappGroupId: groupId
         });
 
