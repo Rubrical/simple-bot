@@ -1,5 +1,6 @@
 import * as linkify from 'linkifyjs'
 import { spawn } from 'node:child_process'
+import { JidInfo, JidType } from '../types/domain.d';
 
 export const extractNumbers = (content: string): string[] => {
   const numbers = content.match(/-?\d+/g);
@@ -27,4 +28,15 @@ export const verifyIfFFMPEGisInstalled = (): Promise<boolean> => {
       if (code !== 0) resolve(false)
     })
   })
+}
+
+export const validateRemoteJid = (remoteJid: string): JidInfo => {
+  const fromPrivate = '@s.whatsapp.net';
+  const fromGroup = '@g.us';
+  const phoneNumber = remoteJid.split("@")[0];
+
+  if (remoteJid.endsWith(fromGroup)) return { phoneNumber: phoneNumber, type: JidType.GROUP }
+  if (remoteJid.endsWith(fromPrivate)) return { phoneNumber: phoneNumber, type: JidType.PRIVATE }
+
+  return { phoneNumber: phoneNumber, type: JidType.UNKNOWN };
 }

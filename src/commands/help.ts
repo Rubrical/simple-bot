@@ -1,4 +1,4 @@
-import { IChiakiCommand, SerializedMessage } from "../types";
+import { IChiakiCommand, SerializedMessage } from "../types/types";
 
 
 const help: IChiakiCommand = {
