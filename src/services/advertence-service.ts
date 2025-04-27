@@ -7,6 +7,7 @@ const url = "advertence";
 const routes = {
     newAdvertence: `${url}/add-advertence`,
     removeAdvertence: `${url}/remove-advertence`,
+    removedExpiredAdvertences: `${url}/remove-expired-advertences`
 }
 
 export const AdvertenceService = {
@@ -27,6 +28,11 @@ export const AdvertenceService = {
             if (error.code === 500) return error.message;
             return null;
         });
+    },
+    cleanAll: async () => {
+        return await api.post<string>(routes.removedExpiredAdvertences)
+            .then((data) => logger.info(`${data}`))
+            .catch((error) => logger.warn(`Erro ao limpar todas as advertências ${JSON.stringify(error)}`));
     },
 }
 

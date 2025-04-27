@@ -8,6 +8,7 @@ import { GroupParticipantsEvent } from './events/group-participants-event';
 import { MessageUpsertEvent } from './events/messages-upsert-event';
 import { GroupsUpsert } from './events/groups-upsert-event';
 import { GroupsUpdate } from './events/groups-update-event';
+import { AdvertenceService } from './services/advertence-service';
 
 function getConfig(): ChiakiConfig {
     return {
@@ -43,6 +44,9 @@ const start = async (): Promise<ChiakiClient | void> => {
     client.ev.on("groups.upsert", async (event) => await GroupsUpsert(event, client));
     client.ev.on("groups.update", async (event) => await GroupsUpdate(event, client));
     client.ev.on('group-participants.update', async (event) => await GroupParticipantsEvent(event, client));
+
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    setInterval(AdvertenceService.cleanAll, sevenDays);
 
     return client;
 };
