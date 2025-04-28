@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
   libjpeg-dev libgif-dev librsvg2-dev webp && \
   rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 RUN npm install
 
 COPY . .
@@ -16,6 +16,8 @@ RUN npm run build
 FROM node:lts-buster
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y ffmpeg imagemagick && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./

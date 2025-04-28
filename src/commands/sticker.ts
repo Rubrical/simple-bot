@@ -18,7 +18,7 @@ const stickerCommand: IChiakiCommand = {
         const tempDir = path.join(__dirname, "..", "temp");
         if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
-        const waitMessage = M.reply("⏱️ Aguarde a criação do seu sticker").catch(e =>
+        M.reply("⏱️ Aguarde a criação do seu sticker").catch(e =>
             logger.warn("Erro ao enviar mensagem de espera: ", JSON.stringify(e))
         );
 
@@ -27,7 +27,6 @@ const stickerCommand: IChiakiCommand = {
         const isMediaValid = supportedTypes.includes(mtype);
 
         if (!isMediaValid) {
-            await waitMessage;
             return M.reply("❌ *Envie ou marque uma imagem, vídeo ou GIF*");
         }
 
@@ -92,7 +91,7 @@ const stickerCommand: IChiakiCommand = {
                 try {
                     fs.unlinkSync(tempFilePath);
                 } catch (err) {
-                    logger.warn("Falha na limpeza:", err);
+                    logger.error("Falha na limpeza:", err);
                 }
             }
         }
