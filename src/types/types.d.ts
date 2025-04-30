@@ -2,6 +2,7 @@ import { proto, WASocket } from '@whiskeysockets/baileys';
 import { Logger } from 'winston';
 import { ParticipantAction } from "@whiskeysockets/baileys";
 import { JidInfo } from './domain';
+import { deprecate } from 'util';
 
 /**
  * Configurações do ChiakiBot
@@ -53,9 +54,11 @@ export type SerializedMessage = proto.IWebMessageInfo & {
       fromMe?: boolean;
       remoteJid?: string;
     };
+    /** @deprecated */
     download: () => Promise<Buffer>;
   } | null;
   reply: (text: string, options?: any) => Promise<any>;
+  /** @deprecated */
   download: () => Promise<Buffer>;
   numbers: string[];
   urls: string[];

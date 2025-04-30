@@ -1,101 +1,137 @@
 import { IChiakiCommand } from "../types/types";
-import { Sticker, createSticker, StickerTypes, IStickerOptions } from "wa-sticker-formatter";
+// import {
+//   Sticker,
+//   createSticker,
+//   StickerTypes,
+//   IStickerOptions,
+// } from "wa-sticker-formatter";
 import { randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import logger from "../logger";
+import {
+  downloadContentFromMessage,
+  getContentType,
+  proto,
+} from "@whiskeysockets/baileys";
+import { createSticker } from "../utils/sticker-utils";
+import { StickerError } from "../types/sticker-error";
+
+
+export async function safeDownloadMedia(
+  message: proto.IWebMessageInfo | proto.IMessage
+): Promise<Buffer | null> {
+  try {
+    let contentMessage: any =
+      (message as proto.IWebMessageInfo).message || message;
+
+    if (!contentMessage) {
+      return null;
+    }
+
+    if (contentMessage.ephemeralMessage) {
+      contentMessage = contentMessage.ephemeralMessage.message;
+    }
+
+    if (contentMessage.viewOnceMessageV2) {
+      contentMessage = contentMessage.viewOnceMessageV2.message;
+    }
+
+    const type = getContentType(contentMessage);
+    if (!type) {
+      return null;
+    }
+
+    const media = contentMessage[type];
+
+    if (!media || !media.url || !media.mediaKey || !media.directPath) {
+      return null;
+    }
+
+    const stream = await downloadContentFromMessage(
+      media,
+      type.replace("Message", "") as any
+    );
+    const bufferArray: Buffer[] = [];
+
+    for await (const chunk of stream) {
+      bufferArray.push(chunk);
+    }
+
+    return Buffer.concat(bufferArray);
+  } catch (error) {
+    logger.error(`Erro ao baixar mídia: ${JSON.stringify(error)}`);
+    return Buffer.from([]);
+  }
+}
+
+
+export function ensureTempDir(): string {
+  const tempDir = path.join(__dirname, "..", "temp");
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+  return tempDir;
+}
 
 const stickerCommand: IChiakiCommand = {
-    command: {
-        name: "sticker",
-        aliases: ["s", "figurinha", "stiker", "f"],
-        category: "utilidades",
-        usage: "[marque mídia] |Nome Pacote|Autor",
-        description: "Converte imagens, vídeos e GIFs em figurinhas",
-    },
+  command: {
+    name: "sticker",
+    aliases: ["s", "figurinha", "stiker", "f"],
+    category: "utilidades",
+    usage: "[marque mídia] |Nome Pacote|Autor",
+    description: "Converte imagens, vídeos e GIFs em figurinhas",
+  },
 
-    async execute(client, flag, arg, M) {
-        const tempDir = path.join(__dirname, "..", "temp");
-        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+  async execute(client, flag, arg, M) {
+    const tempDir = ensureTempDir();
+    logger.info("Executando comando de sticker...");
 
-        M.reply("⏱️ Aguarde a criação do seu sticker").catch(e =>
-            logger.warn("Erro ao enviar mensagem de espera: ", JSON.stringify(e))
-        );
+    await M.reply("⏱️ Aguarde a criação do seu sticker").catch(e =>
+      logger.warn("Erro ao enviar mensagem de espera: ", JSON.stringify(e))
+    );
 
-        const supportedTypes = ["imageMessage", "videoMessage", "stickerMessage"];
-        const mtype = M.quoted?.mtype ?? M.type;
-        const isMediaValid = supportedTypes.includes(mtype);
+    const mediaMessage = M.quoted?.message || M.message;
+    const actualType = getContentType(mediaMessage) ?? "";
+    const supportedTypes = ["imageMessage", "videoMessage", "stickerMessage"];
 
-        if (!isMediaValid) {
-            return M.reply("❌ *Envie ou marque uma imagem, vídeo ou GIF*");
-        }
+    logger.info("Tipo detectado da mídia:", actualType);
 
-        const parts = arg.split("|");
-        const packName = parts[1]?.trim() || `Criado por ${client.config.name}`;
-        const authorName = parts[2]?.trim() || client.config.name;
+    if (!supportedTypes.includes(actualType)) {
+      logger.warn("Tipo de mídia não suportado:", actualType);
+      return M.reply("❌ *Envie ou marque uma imagem, vídeo ou GIF*.");
+    }
 
-        const stickerOptions: Partial<IStickerOptions> = {
-            pack: packName,
-            author: authorName,
-            type: StickerTypes.FULL,
-            quality: 60,
-            id: randomBytes(16).toString("hex"),
-            background: "transparent"
-        };
+    const parts = arg.split("|");
+    const packName = parts[1]?.trim() || `${client.config.name} 1.1`;
+    const authorName = parts[2]?.trim() || client.config.name;
+    const mediaBuffer = await safeDownloadMedia(M.quoted ?? M);
 
-        let mediaBuffer: Buffer;
-        try {
-            mediaBuffer = M.quoted ? await M.quoted.download() : await M.download();
-        } catch (err) {
-            logger.error("Erro no download:", err);
-            return M.reply("❌ *Falha ao baixar a mídia*");
-        }
+    if (!mediaBuffer || mediaBuffer.length === 0) {
+      logger.warn("Buffer vazio ou mídia indisponível para download");
+      return M.reply("❌ Não consegui baixar a mídia. Talvez tenha expirado ou sido apagada.");
+    }
 
-        const isVideo = mtype === "videoMessage";
-        const isAnimated = mtype === "stickerMessage" && M.message?.stickerMessage?.isAnimated;
+    try {
+      const stickerBuffer = await createSticker(mediaBuffer, {
+        pack: packName,
+        author: authorName,
+        fps: 9,
+        type: 'resize'
+      });
 
-        let tempFilePath = "";
-        let sticker;
-
-        try {
-            if (isVideo || isAnimated) {
-                tempFilePath = path.join(tempDir, `temp_${Date.now()}.mp4`);
-                fs.writeFileSync(tempFilePath, mediaBuffer);
-
-                stickerOptions.quality = 50;
-                sticker = await createSticker(tempFilePath, stickerOptions);
-            } else {
-                sticker = await new Sticker(mediaBuffer, stickerOptions).build();
-            }
-
-            await client.sendMessage(M.from, { sticker }, { quoted: M });
-        } catch (error: any) {
-            logger.error("Erro na criação do sticker:", error);
-
-            let errorMsg = "❌ Erro ao criar figurinha";
-            if (error.message.includes("duration too long")) {
-                errorMsg = "⏱️ Vídeo muito longo (máx. 10 segundos)";
-            } else if (error.message.includes("invalid file")) {
-                errorMsg = "📁 Formato de arquivo inválido";
-            } else if (error.message.includes("ENOENT")) {
-                errorMsg = "⚠️ Problema temporário no servidor";
-            } else if (error.message.includes("exceeds pixel limit") || error.message.includes("Buffer too large")) {
-                errorMsg = "📏 Mídia muito grande (limite: ~5MB)";
-            } else if (error.message.includes("Could not find MIME")) {
-                errorMsg = "🖼️ Tipo de arquivo não suportado";
-            }
-
-            await M.reply(errorMsg);
-        } finally {
-            if (tempFilePath && fs.existsSync(tempFilePath)) {
-                try {
-                    fs.unlinkSync(tempFilePath);
-                } catch (err) {
-                    logger.error("Falha na limpeza:", err);
-                }
-            }
-        }
-    },
+      await client.sendMessage(M.from, { sticker: stickerBuffer }, { quoted: M });
+      logger.info("Figurinha enviada com sucesso.");
+    } catch (error: any) {
+      if (error instanceof StickerError) {
+        logger.warn(`Erro específico de figurinha: ${JSON.stringify(error)}`);
+        await M.reply(`${error.message}`);
+      } else {
+        logger.error("Erro na criação do sticker:", error);
+        await M.reply("❌ Ocorreu um erro ao criar a figurinha. Tente novamente.");
+      }
+    }
+  },
 };
 
 export default stickerCommand;
