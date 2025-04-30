@@ -92,7 +92,8 @@ async function webpConvertion(
           '-loop', '0',
           '-lossless', '1',
           '-q:v', '100',
-          '-preset', 'picture'
+          '-preset', 'picture',
+          '-vf', 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000'
         ];
 
     await new Promise<void>((resolve, reject) => {
