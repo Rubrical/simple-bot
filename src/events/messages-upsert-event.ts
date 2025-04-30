@@ -27,8 +27,6 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
     try {
         const remoteJid = client.utils.validateRemoteJid(sender).phoneNumber;
         const user = await UsersService.getUser(remoteJid);
-        client.log.info(`${M.pushName}`);
-        client.log.info(`${JSON.stringify(user)}`);
 
         if (user === false) {
             client.log.warn(`Aviso: erro em getUser`);
