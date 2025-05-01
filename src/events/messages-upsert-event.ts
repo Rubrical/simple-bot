@@ -2,7 +2,9 @@ import { getContentType } from "@whiskeysockets/baileys";
 import logger from "../logger";
 import { ChiakiClient, MessagesUpsertType } from "../types/types";
 import { serialize } from "../utils/serialize";
-import { UsersService } from "../services/user-service";
+import { UsersService, UserRequest } from '../services/user-service';
+import { GroupsService } from "../services/group-service";
+import { GroupUserRequest } from '../types/domain';
 
 
 export async function MessageUpsertEvent(messages: MessagesUpsertType, client: ChiakiClient) {
@@ -14,7 +16,7 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
     const M = serialize(JSON.parse(JSON.stringify(messages.messages[0])), client);
 
     if (!M.message || !M.key || M.key.remoteJid === 'status@broadcast') return;
-    if (['protocolMessage', 'senderKeyDistributionMessage', '', null].includes(M.type)) return;
+    if (["protocolMessage", "senderKeyDistributionMessage", "", null].includes(M.type)) return;
 
     if (M.type === 'viewOnceMessageV2') {
         M.message = M.message[M.type].message;
@@ -31,10 +33,7 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
         if (user === false) {
             client.log.warn(`Aviso: erro em getUser`);
         } else if (user === null && remoteJid) {
-            await UsersService.newUser({
-                remoteJid: sender,
-                userName: M.pushName
-            });
+            createAndAddUserToGroup({ remoteJid: remoteJid, userName: M.pushName || "S/N" }, from);
         } else if (typeof user !== "boolean" && user.nome === "S/N") {
             await UsersService.updateUser({
                 remoteJid: remoteJid,
@@ -43,20 +42,40 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
             });
         }
 
-        if (!body) {
-            if (isGroup) await UsersService.incrementMessages({ whatsappGroupId: from, remoteJid: sender });
-            return;
-        }
-
         const isCommand = body.startsWith(client.config.prefix);
 
         if (isGroup) {
-            if (isCommand) {
-                await UsersService.incrementCommands({ whatsappGroupId: from, remoteJid: sender });
-            } else {
-                await UsersService.incrementMessages({ whatsappGroupId: from, remoteJid: sender });
+            const target: GroupUserRequest = { groupRemoteJid: from, userRemoteJid: remoteJid };
+            const isCmd = body?.startsWith(client.config.prefix);
+
+            client.log.info(`[DEBUG] ${isCmd ? 'Comando' : 'Mensagem'} detectado de ${remoteJid} no grupo ${from}`);
+
+            try {
+              if (isCmd) {
+                const result = await UsersService.incrementCommands(target);
+                if (result === false) {
+                  client.log.warn(`[WARN] Usuário ${remoteJid} não cadastrado no grupo. Tentando adicionar...`);
+                  await createAndAddUserToGroup({ remoteJid, userName: M.pushName }, from);
+                } else if (result === null) {
+                  client.log.warn(`[WARN] Backend indisponível para incrementar comandos`);
+                } else {
+                  client.log.info(`[OK] Comando incrementado para ${remoteJid}`);
+                }
+              } else {
+                const result = await UsersService.incrementMessages(target);
+                if (result === false) {
+                  client.log.warn(`[WARN] Usuário ${remoteJid} não cadastrado no grupo. Tentando adicionar...`);
+                  await createAndAddUserToGroup({ remoteJid, userName: M.pushName }, from);
+                } else if (result === null) {
+                  client.log.warn(`[WARN] Backend indisponível para incrementar mensagens`);
+                } else {
+                  client.log.info(`[OK] Mensagem incrementada para ${remoteJid}`);
+                }
+              }
+            } catch (err) {
+              client.log.error(`[ERROR] Erro ao tentar registrar comando ou mensagem: ${err.message}`);
             }
-        }
+          }
 
         if (!isCommand) return;
 
@@ -92,11 +111,20 @@ export async function MessageUpsertEvent(messages: MessagesUpsertType, client: C
 
         client.log.info(`Executando comando: ${command.command.name} para ${M.from}`);
         await command.execute(client, flag, arg, M, messages.messages);
-
     } catch (err) {
         if (err instanceof TypeError) {
             await client.sendMessage(M.from, { text: "O comando não foi utilizado corretamente." }, { quoted: M });
         }
         client.log.error('Erro ao processar mensagem:', err);
     }
+}
+
+async function createAndAddUserToGroup(user: UserRequest, groupId: string): Promise<void> {
+    const newUser = await UsersService.newUser(user);
+
+    if (!newUser) logger.warn("Usuário já cadastrado ou backend offline");
+
+    const newGroupUser = await GroupsService.addUserToGroup({ userId: user.remoteJid, groupId: groupId });
+
+    if (!newGroupUser) logger.warn("Usuário já está no grupo ou backend offline");
 }

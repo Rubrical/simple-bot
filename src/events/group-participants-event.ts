@@ -15,7 +15,6 @@ export async function GroupParticipantsEvent(
     const botJid = botFullId.includes(":")
         ? botFullId.replace(/:\d+/, "")
         : botFullId;
-    const botId = client.utils.validateRemoteJid(botJid).phoneNumber;
 
     const wasRemoved =
         event.action === "remove" &&
@@ -72,7 +71,7 @@ export async function GroupParticipantsEvent(
                 if (message === null) {
                     text = `Seja muito bem-vindo(a) ao nosso grupo! => *${groupMetadata.subject}* -\n\n💈 *Descrição do Grupo:*\n${groupMetadata.desc || 'Sem descrição disponível.'}\n\nSiga as regras e se divirta!\n\n*‣ ${event.participants.map(jid => `@${jid.split('@')[0]}`).join(' ')}*`;
                 } else {
-                    text = message.mensagem;
+                    text = message.mensagem + `\n@${parsedJid}`;
                 }
             }
         }
@@ -103,8 +102,8 @@ export async function GroupParticipantsEvent(
             if (user !== null && typeof user !== "boolean") {
                 const res = await UsersService.updateUser({
                     remoteJid: user.remoteJid,
-                    userName: user.nome,
-                    userRoleEnum: 2,
+                    name: user.nome,
+                    roleEnum: 2,
                 });
             }
         }
@@ -116,8 +115,8 @@ export async function GroupParticipantsEvent(
             if (user !== null && typeof user !== "boolean") {
                 const res = await UsersService.updateUser({
                     remoteJid: user.remoteJid,
-                    userName: user.nome,
-                    userRoleEnum: 3,
+                    name: user.nome,
+                    roleEnum: 3,
                 });
             }
         }

@@ -31,8 +31,10 @@ export const UsersService = {
                 logger.info(`Incremento de mensagens bem-sucessedido`);
                 return messages;
             })
-            .catch((err) => {
+            .catch((err: ChiakiError) => {
                 logger.warn(`Não foi possível aumentar o número de mensagens do usuário.\n ${err}`);
+                if (err.code === 422) return false;
+                return null;
             });
     },
     incrementCommands: async (groupUser: GroupUserRequest) => {
@@ -41,8 +43,10 @@ export const UsersService = {
                 logger.info(`Incremento de comandos bem-sucessedido`);
                 return commands;
             })
-            .catch((err) => {
+            .catch((err: ChiakiError) => {
                 logger.warn(`Não foi possível aumentar o número de mensagens do usuário.\n ${err}`);
+                if (err.code === 422) return false;
+                return null;
             });
     },
     userInfo: async (remoteJid: string) => {

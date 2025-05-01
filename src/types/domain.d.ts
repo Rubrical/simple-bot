@@ -59,8 +59,8 @@ export type Ban = {
 }
 
 export type GroupUserRequest = {
-    remoteJid: string;
-    whatsappGroupId: string;
+    userRemoteJid: string;
+    groupRemoteJid: string;
 }
 
 export enum JidType {

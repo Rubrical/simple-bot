@@ -83,15 +83,20 @@ export const GroupsService = {
                 return null;
             });
     },
-    addUserToGroup: async (data: UserToGroupRequest): Promise<GroupUser|null> => {
+    addUserToGroup: async (data: UserToGroupRequest): Promise<boolean|null> => {
         return await api.post<GroupUser>(routes.addUserToGroup(), data)
             .then((data) => {
                 logger.info(`Novo usuário no grupo **${data.grupo.nomeGrupo}**`);
-                return data;
+                logger.info(`${JSON.stringify(data)}`);
+
+                return true;
             })
-            .catch((err) => {
+            .catch((err: ChiakiError) => {
                 logger.warn("Erro ao adicionar usuário a grupo");
                 logger.warn(`${JSON.stringify(err)}`);
+
+                if (err.code === 409) return false;
+
                 return null;
             });
     },
