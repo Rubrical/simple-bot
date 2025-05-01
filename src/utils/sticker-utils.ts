@@ -6,6 +6,7 @@ import webp from 'node-webpmux';
 import fileType from "file-type";
 import jimp from 'jimp';
 import { StickerError } from '../types/sticker-error';
+import logger from '../logger';
 
 export type StickerType = 'resize' | 'contain' | 'circle';
 
@@ -62,7 +63,10 @@ async function webpConvertion(
   const inputPath = getTempPath(isAnimated ? 'mp4' : 'png');
   const outputPath = getTempPath('webp');
 
-  if (!isAnimated) mediaBuffer = await editImage(mediaBuffer, type);
+  if (!isAnimated && type !== 'resize') {
+    mediaBuffer = await editImage(mediaBuffer, type);
+  }
+
   await fs.writeFile(inputPath, mediaBuffer);
 
   if (isAnimated) {
@@ -77,23 +81,24 @@ async function webpConvertion(
     const options = isAnimated
       ? [
           '-vcodec', 'libwebp',
-            '-filter:v', `fps=${fps}`,
-            '-lossless', '1',
-            '-compression_level', '6',
-            '-q:v', '50',
-            '-loop', '0',
-            '-preset', 'default',
-            '-an', '-vsync', '0',
-            '-s', '512:512',
-            '-t', '6'
+          '-filter:v', `fps=${fps}`,
+          '-lossless', '1',
+          '-compression_level', '6',
+          '-q:v', '50',
+          '-loop', '0',
+          '-preset', 'default',
+          '-an', '-vsync', '0',
+          '-s', '512:512',
+          '-t', '6'
         ]
       : [
           '-vcodec', 'libwebp',
           '-loop', '0',
           '-lossless', '1',
           '-q:v', '100',
-          '-preset', 'picture',
-          '-vf', 'scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=0x00000000'
+          '-preset', 'picture',,
+          '-pix_fmt', 'yuva420p',
+          '-vf', 'scale=512:512:force_original_aspect_ratio=decrease:eval=frame,pad=512:512:(ow-iw)/2:(oh-ih)/2:color=#00000000'
         ];
 
     await new Promise<void>((resolve, reject) => {
@@ -131,12 +136,16 @@ async function pngConvertion(mediaBuffer: Buffer): Promise<Buffer> {
 }
 
 async function editImage(buffer: Buffer, type: StickerType): Promise<Buffer> {
+  logger.error(`${JSON.stringify(buffer)}`);
+  logger.error(`${JSON.stringify(type)}`);
+
   const image = await jimp.read(buffer);
-  if (type === 'resize') image.resize(512, 512);
-  else if (type === 'contain') image.contain(512, 512);
+  if (type === 'contain') image.contain(512, 512);
   else if (type === 'circle') {
     image.resize(512, 512);
     image.circle();
+  } else {
+    return buffer; // preserve original for 'resize'
   }
   return image.getBufferAsync('image/png');
 }
