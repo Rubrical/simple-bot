@@ -140,6 +140,7 @@ export const GroupsService = {
             .then((data) => data);
     },
     usersRank: async (id: string, qty?: number) => {
+        if (qty === undefined) qty = 5;
         return await api.get<UsersRank>(routes.getMostActiveMembers(id, qty))
             .then((data) => data)
             .catch((err: ChiakiError) => {

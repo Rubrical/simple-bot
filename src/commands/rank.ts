@@ -6,7 +6,7 @@ const rank: IChiakiCommand = {
     command: {
         name: "rank",
         aliases: ["rank"],
-        category: "moderação",
+        category: "geral",
         usage: "rank [quantidade]",
         description: "Exibe o ranking dos usuários mais ativos do grupo.",
     },
@@ -27,7 +27,7 @@ const rank: IChiakiCommand = {
         }
 
         const ranking = result
-            .map((user, index) => 
+            .map((user, index) =>
                 `${index + 1}. ${user.nome} - ${user.quantidadeMensagens} mensagens - ${user.comandosExecutados} comandos`
             )
             .join("\n");
