@@ -22,57 +22,77 @@ export async function GroupParticipantsEvent(
 
     if (wasRemoved) {
         client.log.info(`Bot foi removido do grupo de id ${event.id}`);
-        GroupsService.inactivateGroup(event.id) ?? client.log.warn(`Grupo "${event.id}" não desativado`);
+        try {
+            await GroupsService.inactivateGroup(event.id);
+        } catch (err) {
+            client.log.warn(`Grupo "${event.id}" não desativado (backend offline tolerado)`);
+        }
         return;
     }
 
-    const messageStatus = await GroupsService.verifyMessageStatus(event.id);
-    const groupMetadata = await client.groupMetadata(event.id);
-    let text: string|null = null;
+    let messageStatus = null;
+    try {
+        messageStatus = await GroupsService.verifyMessageStatus(event.id);
+    } catch (err) {
+        client.log.warn("[Backend offline tolerado] Erro ao verificar status de mensagens de grupo");
+    }
+
+    const groupMetadata = await client.groupMetadata(event.id).catch(() => null);
+    let text: string | null = null;
     let wasUserBanned = false;
 
     if (event.action === "add") {
         for (const participant of event.participants) {
             const parsedJid = client.utils.validateRemoteJid(participant).phoneNumber;
-            const ban = await BanService.findOne({ groupRemoteJid: event.id, userRemoteJid: parsedJid });
-            const user = await UsersService.getUser(parsedJid);
-            const message = await MessageService.getMessage("welcome-message", groupMetadata.subject);
 
-            if (ban) {
-                client.log.info(`Usuário ${parsedJid} banido anteriormente. Removendo do grupo...`);
-                wasUserBanned = true;
-                try {
-                    await client.groupParticipantsUpdate(event.id, [participant], "remove");
-                } catch (err) {
-                    client.log.error(`Erro ao remover usuário ${participant}:`, err);
+            try {
+                const ban = await BanService.findOne({ groupRemoteJid: event.id, userRemoteJid: parsedJid });
+                if (ban) {
+                    client.log.info(`Usuário ${parsedJid} banido anteriormente. Removendo do grupo...`);
+                    wasUserBanned = true;
+                    try {
+                        await client.groupParticipantsUpdate(event.id, [participant], "remove");
+                    } catch (err) {
+                        client.log.error(`Erro ao remover usuário ${participant}:`, err);
+                    }
+                    return;
                 }
-                return;
+            } catch (err) {
+                client.log.warn("[Backend offline tolerado] Erro ao verificar banimento");
             }
 
-            if (user === null) {
-                await UsersService.newUser({
-                    remoteJid: parsedJid,
-                    userName: "S/N",
-                });
-                await GroupsService.addUserToGroup({
-                    groupId: event.id,
-                    userId: parsedJid,
-                });
-            } else if (user !== false && user) {
-                await GroupsService.reactivateUserFromGroup({
-                    userId: parsedJid,
-                    groupId: event.id,
-                });
+            try {
+                const user = await UsersService.getUser(parsedJid);
+                if (user === null) {
+                    await UsersService.newUser({
+                        remoteJid: parsedJid,
+                        userName: "S/N",
+                    });
+                    await GroupsService.addUserToGroup({
+                        groupId: event.id,
+                        userId: parsedJid,
+                    });
+                } else if (user !== false && user) {
+                    await GroupsService.reactivateUserFromGroup({
+                        userId: parsedJid,
+                        groupId: event.id,
+                    });
+                }
+            } catch (err) {
+                client.log.warn("[Backend offline tolerado] Erro ao registrar novo usuário no grupo");
             }
 
-            if (typeof messageStatus === "string") return;
-
-            if (messageStatus.isWelcomeMessageActive) {
-                if (message === null) {
-                    text = `Seja muito bem-vindo(a) ao nosso grupo! => *${groupMetadata.subject}* -\n\n💈 *Descrição do Grupo:*\n${groupMetadata.desc || 'Sem descrição disponível.'}\n\nSiga as regras e se divirta!\n\n*‣ ${event.participants.map(jid => `@${jid.split('@')[0]}`).join(' ')}*`;
-                } else {
-                    text = message.mensagem + `\n@${parsedJid}`;
+            try {
+                if (typeof messageStatus !== "string" && messageStatus?.isWelcomeMessageActive) {
+                    const message = await MessageService.getMessage("welcome-message", groupMetadata?.subject);
+                    if (message === null) {
+                        text = `Seja muito bem-vindo(a) ao nosso grupo! => *${groupMetadata?.subject}* -\n\n💈 *Descrição do Grupo:*\n${groupMetadata?.desc || 'Sem descrição disponível.'}\n\nSiga as regras e se divirta!\n\n*‣ ${event.participants.map(jid => `@${jid.split('@')[0]}`).join(' ')}*`;
+                    } else {
+                        text = message.mensagem + `\n@${parsedJid}`;
+                    }
                 }
+            } catch (err) {
+                client.log.warn("[Backend offline tolerado] Erro ao buscar mensagem de boas-vindas");
             }
         }
     } else if (event.action === "remove") {
@@ -80,44 +100,39 @@ export async function GroupParticipantsEvent(
             if (wasUserBanned) return;
 
             const parsedJid = client.utils.validateRemoteJid(participant).phoneNumber;
-            const res = await GroupsService.inactivateUserFromGroup({ groupId: event.id, userId: parsedJid });
-            const message = await MessageService.getMessage("goodbye-message", groupMetadata.subject);
+            try {
+                await GroupsService.inactivateUserFromGroup({ groupId: event.id, userId: parsedJid });
+            } catch (err) {
+                client.log.warn(`Usuário ${parsedJid} não desativado (backend offline)`);
+            }
 
-            if (res)
-                client.log.warn(`Usuário ${parsedJid} não desativado`);
-
-            if (typeof messageStatus !== "string" && messageStatus.isGoodByeMessageActive) {
-                if (message === null) {
-                    text = `Adeus *${event.participants.map(jid => `@${jid.split('@')[0]}`).join(', ')}* 👋🏻, sentiremos sua falta`;
-                } else {
-                    text = message.mensagem;
+            try {
+                if (typeof messageStatus !== "string" && messageStatus?.isGoodByeMessageActive) {
+                    const message = await MessageService.getMessage("goodbye-message", groupMetadata?.subject);
+                    if (message === null) {
+                        text = `Adeus *${event.participants.map(jid => `@${jid.split('@')[0]}`).join(', ')}* 👋🏻, sentiremos sua falta`;
+                    } else {
+                        text = message.mensagem;
+                    }
                 }
+            } catch (err) {
+                client.log.warn("[Backend offline tolerado] Erro ao buscar mensagem de despedida");
             }
         }
-    } else if (event.action === "promote") {
+    } else if (event.action === "promote" || event.action === "demote") {
         for (const participant of event.participants) {
             const parsedJid = client.utils.validateRemoteJid(participant).phoneNumber;
-            const user = await UsersService.getUser(parsedJid);
-
-            if (user !== null && typeof user !== "boolean") {
-                const res = await UsersService.updateUser({
-                    remoteJid: user.remoteJid,
-                    name: user.nome,
-                    roleEnum: 2,
-                });
-            }
-        }
-    } else if (event.action === "demote") {
-        for (const participant of event.participants) {
-            const parsedJid = client.utils.validateRemoteJid(participant).phoneNumber;
-            const user = await UsersService.getUser(parsedJid);
-
-            if (user !== null && typeof user !== "boolean") {
-                const res = await UsersService.updateUser({
-                    remoteJid: user.remoteJid,
-                    name: user.nome,
-                    roleEnum: 3,
-                });
+            try {
+                const user = await UsersService.getUser(parsedJid);
+                if (user !== null && typeof user !== "boolean") {
+                    await UsersService.updateUser({
+                        remoteJid: user.remoteJid,
+                        name: user.nome,
+                        roleEnum: event.action === "promote" ? 2 : 3,
+                    });
+                }
+            } catch (err) {
+                client.log.warn(`[Backend offline tolerado] Erro ao atualizar cargo de ${parsedJid}`);
             }
         }
     }

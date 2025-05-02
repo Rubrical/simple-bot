@@ -9,7 +9,7 @@ export async function GroupsUpdate(event: Partial<GroupMetadata>[], client: Chia
     for (const updateEvent of event) {
         const groupId = updateEvent.id;
         const updatedGroup = await GroupsService.updateGroup(groupId, {
-            descriacaoGrupo: updateEvent?.desc,
+            descricaoGrupo: updateEvent?.desc,
             donoGrupoId: updateEvent?.owner,
             nomeGrupo: updateEvent?.subject,
             whatsappGroupId: groupId,
