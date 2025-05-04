@@ -1,5 +1,6 @@
 import { ChiakiClient, IChiakiCommand } from "../types/types";
 import addAdvertence from "./add-adv";
+import addImg from "./add-img";
 import atAdeus from "./at-adeus";
 import atBv from "./at-bv";
 import banUser from "./ban";
@@ -33,6 +34,7 @@ const commands: Array<IChiakiCommand> = [
     unbanUser,
     rank,
     msgStatus,
+    addImg,
 ];
 
 export const loadCommands = (client: ChiakiClient): ChiakiClient => {

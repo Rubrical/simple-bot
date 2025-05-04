@@ -39,6 +39,7 @@ export async function GroupParticipantsEvent(
 
     const groupMetadata = await client.groupMetadata(event.id).catch(() => null);
     let text: string | null = null;
+    let imageBuffer: Buffer | null = null;
     let wasUserBanned = false;
 
     if (event.action === "add") {
@@ -89,6 +90,9 @@ export async function GroupParticipantsEvent(
                         text = `Seja muito bem-vindo(a) ao nosso grupo! => *${groupMetadata?.subject}* -\n\n💈 *Descrição do Grupo:*\n${groupMetadata?.desc || 'Sem descrição disponível.'}\n\nSiga as regras e se divirta!\n\n*‣ ${event.participants.map(jid => `@${jid.split('@')[0]}`).join(' ')}*`;
                     } else {
                         text = message.mensagem + `\n@${parsedJid}`;
+                        if (message.midia) {
+                            imageBuffer = await MessageService.getMedia(message.midia);
+                        }
                     }
                 }
             } catch (err) {
@@ -113,6 +117,9 @@ export async function GroupParticipantsEvent(
                         text = `Adeus *${event.participants.map(jid => `@${jid.split('@')[0]}`).join(', ')}* 👋🏻, sentiremos sua falta`;
                     } else {
                         text = message.mensagem;
+                        if (message.midia) {
+                            imageBuffer = await MessageService.getMedia(message.midia);
+                        }
                     }
                 }
             } catch (err) {
@@ -137,10 +144,18 @@ export async function GroupParticipantsEvent(
         }
     }
 
-    if (text) {
+    if (text && !imageBuffer) {
         await client.sendMessage(event.id, {
             text,
             mentions: event.participants
+        });
+    }
+
+    if (text && imageBuffer) {
+        await client.sendMessage(event.id, {
+            image: Buffer.from(imageBuffer),
+            caption: text,
+            mentions: event.participants,
         });
     }
 }
