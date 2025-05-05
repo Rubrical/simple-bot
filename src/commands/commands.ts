@@ -4,16 +4,27 @@ import addImg from "./add-img";
 import atAdeus from "./at-adeus";
 import atBv from "./at-bv";
 import banUser from "./ban";
+import chance from "./chance";
 import deleteMessage from "./delete";
+import divorce from "./divorce";
 import editAdeus from "./edit-adeus";
 import editBv from "./edit-bv";
+import gay from "./gay";
 import help from "./help";
+import hottie from "./hottie";
+import kiss from "./kiss";
+import marry from "./marry";
 import mentionAll from "./mention-all";
 import menu from "./menu";
 import msgStatus from "./msg-status";
+import poke from "./poke";
 import rank from "./rank";
 import removeAdvertence from "./rem-adv";
 import remove from "./remove";
+import rich from "./rich";
+import shipp from "./shipp";
+import slap from "./slap";
+import steal from "./steal";
 import stickerCommand from "./sticker";
 import unbanUser from "./unban";
 
@@ -35,6 +46,17 @@ const commands: Array<IChiakiCommand> = [
     rank,
     msgStatus,
     addImg,
+    kiss,
+    slap,
+    gay,
+    shipp,
+    steal,
+    rich,
+    marry,
+    divorce,
+    hottie,
+    poke,
+    chance
 ];
 
 export const loadCommands = (client: ChiakiClient): ChiakiClient => {

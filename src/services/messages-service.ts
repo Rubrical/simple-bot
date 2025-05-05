@@ -41,4 +41,4 @@ export const MessageService = {
 }
 
 
-export type MessageType = 'welcome-message' | 'goodbye-message';
+export type MessageType = 'welcome-message' | 'goodbye-message' | 'joke';
