@@ -3,6 +3,7 @@ import { Boom } from "@hapi/boom";
 import logger from "../logger";
 import { ChiakiClient } from "../types/types";
 import { loadCommands } from "../commands/commands";
+import { startWebSocket, io, stopWebSocket } from "../servers/web-socket";
 
 
 let connectionAttempts = 0;
@@ -16,7 +17,22 @@ export async function ConnectionUpdateEvent(
     client: ChiakiClient,
     startFn: () => Promise<ChiakiClient|void>,
 ) {
-    const { connection, lastDisconnect } = event;
+    const { qr,  connection, lastDisconnect } = event;
+
+    if (qr) {
+        startWebSocket();
+        client.log.info("QR Code gerado, enviando para painel web");
+        io.emit("qr", qr);
+    }
+
+    if (connection === "open") {
+        io.emit("status", "online");
+        stopWebSocket();
+    }
+
+    if (connection === "close" || connection === "connecting") {
+        io.emit("staus", "offline");
+    }
 
     if (connection === "close") {
         const shouldReconnect =
