@@ -57,14 +57,20 @@ const hottie: IChiakiCommand = {
       ? await MessageService.getMedia(msg.midia)
       : null;
 
-    await client.sendMessage(
-      M.from,
-      {
-        ...(imageBuffer ? { image: imageBuffer, caption: text } : { text }),
-        mentions: [targetJid],
-      },
-      { quoted: M }
-    );
+    try {
+      await client.sendMessage(
+        M.from,
+        {
+          ...(imageBuffer ? { image: imageBuffer, caption: text } : { text }),
+          mentions: [targetJid],
+        },
+        { quoted: M }
+      );
+    } catch(err) {
+      const now = new Date(Date.now());
+      await client.sendMessage(M.from, { text: `Um erro inesperado ocorreu!\n Servidor interno fora do ar ou outro erro.\n Horário do erro ${now.toString()}`});
+      client.log.error(`${JSON.stringify(err)}`);
+    }
   },
 };
 

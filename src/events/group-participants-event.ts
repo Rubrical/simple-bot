@@ -152,10 +152,17 @@ export async function GroupParticipantsEvent(
     }
 
     if (text && imageBuffer) {
-        await client.sendMessage(event.id, {
-            image: Buffer.from(imageBuffer),
-            caption: text,
-            mentions: event.participants,
-        });
+        try {
+            await client.sendMessage(event.id, {
+                image: Buffer.from(imageBuffer),
+                caption: text,
+                mentions: event.participants,
+            });
+
+        } catch(err) {
+            const now = new Date(Date.now());
+            await client.sendMessage(event.id, { text: `Um erro inesperado ocorreu!\n Servidor interno fora do ar ou outro erro.\n Horário do erro: ${now.toString()}`});
+            client.log.error(`${JSON.stringify(err)}`);
+        }
     }
 }

@@ -34,21 +34,27 @@ const gay: IChiakiCommand = {
         .replace("{A}", `@${randomMember.split("@")[0]}`)
         .replace("{PERCENTAGE}", `${percentage}`);
 
-      await client.sendMessage(
-        M.from,
-        {
-          ...(imageBuffer
-            ? {
-                image: imageBuffer,
-                caption: text,
-              }
-            : {
-                text,
-              }),
-          mentions: [randomMember],
-        },
-        { quoted: M }
-      );
+      try {
+        await client.sendMessage(
+          M.from,
+          {
+            ...(imageBuffer
+              ? {
+                  image: imageBuffer,
+                  caption: text,
+                }
+              : {
+                  text,
+                }),
+            mentions: [randomMember],
+          },
+          { quoted: M }
+        );
+      } catch(err) {
+        const now = new Date(Date.now());
+        await client.sendMessage(M.from, { text: `Um erro inesperado ocorreu!\n Servidor interno fora do ar ou outro erro.\n Horário do erro ${now.toString()}`});
+        client.log.error(`${JSON.stringify(err)}`);
+      }
     },
   };
 

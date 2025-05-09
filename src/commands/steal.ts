@@ -35,22 +35,27 @@ const steal: IChiakiCommand = {
       const text = msg.mensagem
         .replace("{A}", `@${M.sender.split("@")[0]}`)
         .replace("{B}", `@${mentioned.split("@")[0]}`);
-
-      await client.sendMessage(
-        M.from,
-        {
-          ...(imageBuffer
-            ? {
-                image: imageBuffer,
-                caption: text,
-              }
-            : {
-                text,
-              }),
-          mentions: [M.sender, mentioned],
-        },
-        { quoted: M }
-      );
+      try {
+        await client.sendMessage(
+          M.from,
+          {
+            ...(imageBuffer
+              ? {
+                  image: imageBuffer,
+                  caption: text,
+                }
+              : {
+                  text,
+                }),
+            mentions: [M.sender, mentioned],
+          },
+          { quoted: M }
+        );
+      } catch(err) {
+        const now = new Date(Date.now());
+        await client.sendMessage(M.from, { text: `Um erro inesperado ocorreu!\n Servidor interno fora do ar ou outro erro.\n Horário do erro ${now.toString()}`});
+        client.log.error(`${JSON.stringify(err)}`);
+      }
     },
   };
 
